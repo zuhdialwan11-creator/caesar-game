@@ -1,991 +1,70 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caesar Cipher Challenge: Secret Agent Mission</title>
-    <style>
-        :root {
-            --bg-dark: #0a0e17;
-            --card-bg: rgba(16, 24, 40, 0.75);
-            --border-glow: rgba(0, 243, 255, 0.3);
-            --primary-cyan: #00f3ff;
-            --primary-purple: #9d4edd;
-            --primary-blue: #3a86ff;
-            --accent-pink: #ff007f;
-            --accent-yellow: #ffd166;
-            --text-main: #f8f9fa;
-            --text-muted: #94a3b8;
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            user-select: none;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Particle Canvas */
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* Container Layout */
-        .app-container {
-            width: 100%;
-            max-width: 1100px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 1;
-        }
-
-        /* Header Navigation */
-        header {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: var(--glass-border);
-            border-bottom: 2px solid var(--primary-cyan);
-            border-radius: 16px;
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-logo {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 0 15px var(--primary-cyan);
-        }
-
-        .brand-title h1 {
-            font-size: 18px;
-            background: linear-gradient(90deg, var(--primary-cyan), #ffffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
-        }
-
-        .brand-title p {
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 2px;
-        }
-
-        .user-hud {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .hud-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: var(--glass-border);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .hud-item.coins { color: var(--accent-yellow); border-color: rgba(255, 209, 102, 0.3); }
-        .hud-item.xp { color: var(--primary-cyan); border-color: rgba(0, 243, 255, 0.3); }
-        .hud-item.hearts { color: var(--accent-pink); border-color: rgba(255, 0, 127, 0.3); }
-
-        .audio-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-size: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .audio-btn:hover { transform: scale(1.1); color: var(--primary-cyan); }
-
-        /* Card Glassmorphism Base */
-        .glass-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            border: var(--glass-border);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .glow-effect {
-            box-shadow: 0 0 20px var(--border-glow);
-        }
-
-        /* Buttons */
-        .btn {
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            font-size: 15px;
-            font-weight: 700;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(58, 134, 255, 0.4);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 243, 255, 0.6);
-            filter: brightness(1.1);
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: none;
-            border: var(--glass-border);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #e63946, #d62828);
-            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
-        }
-
-        /* Dynamic Views */
-        .view {
-            display: none;
-            animation: fadeIn 0.4s ease-in-out forwards;
-        }
-
-        .view.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Intro Screen */
-        .intro-screen {
-            text-align: center;
-            max-width: 650px;
-            margin: 40px auto;
-        }
-
-        .intro-title {
-            font-size: 32px;
-            margin-bottom: 15px;
-            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .story-box {
-            background: rgba(0, 0, 0, 0.4);
-            border-left: 4px solid var(--primary-cyan);
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: left;
-            line-height: 1.6;
-            color: #cbd5e1;
-            font-size: 15px;
-        }
-
-        .input-group {
-            margin: 25px 0;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--primary-cyan);
-            letter-spacing: 1px;
-        }
-
-        .input-control {
-            width: 100%;
-            padding: 14px 18px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--primary-cyan);
-            border-radius: 10px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .input-control:focus {
-            box-shadow: 0 0 15px var(--primary-cyan);
-        }
-
-        /* Main Menu Dashboard Grid */
-        .mode-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .mode-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: var(--glass-border);
-            border-radius: 18px;
-            padding: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .mode-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--primary-cyan);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 243, 255, 0.2);
-        }
-
-        .mode-card h3 {
-            font-size: 18px;
-            color: var(--primary-cyan);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .mode-card p {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.4;
-            margin-bottom: 15px;
-        }
-
-        .mode-badge {
-            align-self: flex-start;
-            font-size: 10px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: rgba(0, 243, 255, 0.1);
-            color: var(--primary-cyan);
-            border: 1px solid var(--primary-cyan);
-            text-transform: uppercase;
-        }
-
-        /* Gameplay Container */
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .game-title {
-            font-size: 20px;
-            color: var(--primary-cyan);
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 25px;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-purple));
-            transition: width 0.3s ease;
-        }
-
-        .challenge-box {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 16px;
-            padding: 25px;
-            text-align: center;
-            margin-bottom: 25px;
-            border: 1px dashed var(--border-glow);
-            position: relative;
-        }
-
-        .cipher-display {
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 4px;
-            color: #ffffff;
-            margin: 15px 0;
-            word-break: break-all;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .shift-info {
-            display: inline-block;
-            background: rgba(157, 78, 221, 0.2);
-            color: var(--primary-purple);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            border: 1px solid var(--primary-purple);
-        }
-
-        /* Option Grid for Multiple Choice */
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .option-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: var(--glass-border);
-            padding: 16px;
-            border-radius: 12px;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .option-btn:hover {
-            background: rgba(0, 243, 255, 0.15);
-            border-color: var(--primary-cyan);
-            transform: scale(1.02);
-        }
-
-        /* Visual Cipher Wheel */
-        .wheel-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-            position: relative;
-        }
-
-        .wheel-wrapper {
-            position: relative;
-            width: 260px;
-            height: 260px;
-            margin-bottom: 20px;
-        }
-
-        .wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .outer-wheel {
-            border: 2px solid var(--primary-cyan);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-        }
-
-        .inner-wheel {
-            width: 70%;
-            height: 70%;
-            top: 15%;
-            left: 15%;
-            border: 2px solid var(--primary-purple);
-            box-shadow: 0 0 15px rgba(157, 78, 221, 0.3);
-            background: rgba(10, 14, 23, 0.8);
-        }
-
-        .wheel-letter {
-            position: absolute;
-            font-weight: bold;
-            font-size: 12px;
-            transform-origin: center center;
-        }
-
-        .outer-wheel .wheel-letter { color: var(--primary-cyan); }
-        .inner-wheel .wheel-letter { color: var(--primary-purple); }
-
-        /* Real-time Detective Controls */
-        .shift-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto 20px auto;
-        }
-
-        .shift-slider {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            outline: none;
-        }
-
-        .shift-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: var(--primary-cyan);
-            cursor: pointer;
-            box-shadow: 0 0 10px var(--primary-cyan);
-        }
-
-        .live-decrypt-box {
-            background: rgba(0, 243, 255, 0.05);
-            border: 1px solid var(--primary-cyan);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            min-height: 60px;
-        }
-
-        /* Hints System */
-        .hint-bar {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .hint-btn {
-            background: rgba(255, 209, 102, 0.1);
-            border: 1px solid var(--accent-yellow);
-            color: var(--accent-yellow);
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .hint-btn:hover {
-            background: rgba(255, 209, 102, 0.25);
-        }
-
-        /* Dashboard & Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 12px;
-            border: var(--glass-border);
-            text-align: center;
-        }
-
-        .stat-card .val {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--primary-cyan);
-            margin-top: 5px;
-        }
-
-        .stat-card .lbl {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .badge-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .badge-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: var(--glass-border);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            opacity: 0.4;
-            filter: grayscale(1);
-            transition: 0.3s;
-        }
-
-        .badge-item.unlocked {
-            opacity: 1;
-            filter: grayscale(0);
-            border-color: var(--accent-yellow);
-            background: rgba(255, 209, 102, 0.05);
-            box-shadow: 0 0 10px rgba(255, 209, 102, 0.2);
-        }
-
-        .badge-icon {
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-
-        .badge-name {
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        /* Playground Steps Visualization */
-        .step-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .step-card {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--primary-purple);
-            border-radius: 8px;
-            padding: 8px 12px;
-            text-align: center;
-            animation: popIn 0.3s ease forwards;
-        }
-
-        @keyframes popIn {
-            from { transform: scale(0.7); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .step-card .orig { font-size: 12px; color: var(--text-muted); }
-        .step-card .arrow { font-size: 10px; color: var(--primary-cyan); margin: 2px 0; }
-        .step-card .res { font-size: 16px; font-weight: bold; color: var(--primary-cyan); }
-
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--primary-cyan);
-            border-radius: 24px;
-            padding: 35px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 0 30px var(--primary-cyan);
-            transform: scale(0.8);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-overlay.active .modal-content {
-            transform: scale(1);
-        }
-
-        /* Leaderboard Table */
-        .leaderboard-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            text-align: left;
-        }
-
-        .leaderboard-table th, .leaderboard-table td {
-            padding: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 14px;
-        }
-
-        .leaderboard-table th {
-            color: var(--primary-cyan);
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .app-container { padding: 10px; }
-            header { flex-direction: column; align-items: flex-start; }
-            .user-hud { width: 100%; justify-content: space-between; }
-            .cipher-display { font-size: 22px; letter-spacing: 2px; }
-            .glass-card { padding: 20px; }
-        }
-    </style>
-</head>
-<body>
-
-    <canvas id="particle-canvas"></canvas>
-
-    <div class="app-container">
-        <!-- TOP HUD / HEADER -->
-        <header>
-            <div class="brand">
-                <div class="brand-logo">🔒</div>
-                <div class="brand-title">
-                    <h1>CIPHER AGENT</h1>
-                    <p>SECRET MISSION</p>
-                </div>
-            </div>
-
-            <div class="user-hud">
-                <div class="hud-item xp">⭐ <span id="hud-level">LVL 1</span> (<span id="hud-xp">0</span> XP)</div>
-                <div class="hud-item coins">🪙 <span id="hud-coins">0</span></div>
-                <div class="hud-item hearts"><span id="hud-hearts">❤️❤️❤️</span></div>
-                <button class="audio-btn" id="audio-toggle" title="Toggle Sound">🔊</button>
-            </div>
-        </header>
-
-        <!-- MAIN NAVIGATION CONTENT -->
-        <main>
-            <!-- 1. INTRO / WELCOME VIEW -->
-            <section id="view-intro" class="view glass-card glow-effect intro-screen active">
-                <h2 class="intro-title">Misi Agen Rahasia</h2>
-                <p style="color: var(--text-muted); font-size: 14px;">Caesar Cipher Encryption Challenge</p>
-                
-                <div class="story-box">
-                    "Selamat datang, Agen Cipher.<br><br>
-                    Sebuah organisasi rahasia telah mengirimkan banyak pesan terenkripsi menggunakan Caesar Cipher.<br><br>
-                    Tugasmu adalah memecahkan seluruh pesan tersebut sebelum waktu habis. Setiap misi akan semakin sulit.<br><br>
-                    Apakah kamu siap menjadi <strong>Cipher Master</strong>?"
+<h3 style="margin:25px 0 10px 0; color:var(--primary-cyan);">Papan Peringkat (Top Local Agents)</h3>
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Peringkat</th>
+                            <th>Agen</th>
+                            <th>Skor</th>
+                            <th>Waktu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <!-- Content populated dynamically -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 5. PLAYGROUND / CRYPTO LAB VIEW -->
+            <section id="view-playground" class="view glass-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2>Laboratorium Kriptografi (Playground)</h2>
+                    <button class="btn btn-secondary" onclick="app.showView('view-menu')">◀ Kembali ke Menu</button>
                 </div>
 
                 <div class="input-group">
-                    <label for="player-name-input">IDENTITAS AGEN (NAMA):</label>
-                    <input type="text" id="player-name-input" class="input-control" placeholder="Masukkan nama panggilanmu..." maxlength="15">
+                    <label for="pg-input">INPUT TEKS (PLAIN / CIPHER):</label>
+                    <textarea id="pg-input" class="input-control" rows="3" placeholder="Ketik teks yang ingin dienkripsi atau didekripsi di sini..."></textarea>
                 </div>
 
-                <button class="btn" id="btn-start-game">▶ MULAI MISI</button>
-            </section>
-
-            <!-- 2. MAIN MENU / DASHBOARD VIEW -->
-            <section id="view-menu" class="view glass-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
-                    <div>
-                        <h2>Pilih Misi Operasi</h2>
-                        <p style="color: var(--text-muted); font-size: 13px;" id="welcome-agent-msg">Selamat datang kembali, Agen.</p>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-secondary" id="btn-open-dashboard">📊 Dashboard</button>
-                        <button class="btn btn-secondary" id="btn-open-playground">🧪 Playground</button>
-                    </div>
+                <div class="shift-controls">
+                    <label style="color:var(--primary-cyan); font-size:14px;">NILAI SHIFT (KEY):</label>
+                    <input type="range" id="pg-shift" class="shift-slider" min="1" max="25" value="3" oninput="document.getElementById('pg-shift-val').innerText = this.value; app.runPlayground();">
+                    <span id="pg-shift-val" style="font-weight:bold; color:var(--primary-cyan);">3</span>
                 </div>
 
-                <div class="mode-grid">
-                    <div class="mode-card" onclick="app.startMode('learn')">
-                        <div>
-                            <span class="mode-badge">MODE 1</span>
-                            <h3>📚 Belajar & Main</h3>
-                            <p>Progresi 4 Level: Huruf Tunggal, Enkripsi, Dekripsi, dan Visual Cipher Wheel.</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('timeattack')">
-                        <div>
-                            <span class="mode-badge" style="border-color:var(--accent-pink); color:var(--accent-pink);">MODE 2</span>
-                            <h3>⏱️ Time Attack</h3>
-                            <p>Batas waktu 60 detik. Dekripsi kata sebanyak mungkin untuk skor tertinggi.</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('escaperoom')">
-                        <div>
-                            <span class="mode-badge" style="border-color:var(--accent-yellow); color:var(--accent-yellow);">MODE 3</span>
-                            <h3>🚪 Escape Room</h3>
-                            <p>Buka 5 pintu keamanan berurutan dengan memecahkan kode sandi.</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('boss')">
-                        <div>
-                            <span class="mode-badge" style="border-color:#ff4757; color:#ff4757;">MODE 4</span>
-                            <h3>👾 Boss Battle</h3>
-                            <p>Kalahkan Mainframe Boss dengan mendekripsi kalimat komplit dalam serangan cepat.</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('detective')">
-                        <div>
-                            <span class="mode-badge" style="border-color:var(--primary-purple); color:var(--primary-purple);">MODE 5</span>
-                            <h3>🔍 Cipher Detective</h3>
-                            <p>Mode Pakar. Kunci Shift disembunyikan. Gunakan Slider Dekripsi Real-time!</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('impossible')">
-                        <div>
-                            <span class="mode-badge" style="border-color:#ff0000; color:#ff0000;">MODE 6</span>
-                            <h3>🔥 Impossible Mode</h3>
-                            <p>20 Soal ekstrem. Tanda baca, kapitalisasi, dan angka. Waktu 5 Menit!</p>
-                        </div>
-                        <button class="btn btn-danger" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. GAMEPLAY SCREEN -->
-            <section id="view-gameplay" class="view glass-card glow-effect">
-                <div class="game-header">
-                    <div>
-                        <span id="game-mode-title" class="game-title">MODE PLAY</span>
-                        <div id="game-sub-info" style="font-size:12px; color:var(--text-muted);">Level 1 - Question 1/10</div>
-                    </div>
-                    <div id="game-timer" style="font-size:22px; font-weight:bold; color:var(--accent-yellow);">⏳ --</div>
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <button class="btn" style="flex:1;" onclick="app.runPlayground('encrypt')">🔒 ENKRIPSI</button>
+                    <button class="btn btn-secondary" style="flex:1;" onclick="app.runPlayground('decrypt')">🔓 DEKRIPSI</button>
                 </div>
 
-                <div class="progress-bar-container">
-                    <div id="game-progress-fill" class="progress-bar-fill"></div>
+                <div class="live-decrypt-box">
+                    <div style="font-size:11px; color:var(--primary-cyan); margin-bottom:5px;">HASIL PROSES:</div>
+                    <div id="pg-output" style="font-size:20px; font-weight:bold; word-break:break-all; color:#fff;">-</div>
                 </div>
 
-                <!-- Challenge Visual Display -->
-                <div class="challenge-box">
-                    <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;" id="cipher-label">Pesan Terenkripsi (Ciphertext)</div>
-                    <div id="cipher-display" class="cipher-display">KHOOR</div>
-                    <div id="shift-info" class="shift-info">Shift Key: +3</div>
-                </div>
-
-                <!-- Visual Wheel Container (For Mode 1 Level 4 & Interactive Needs) -->
-                <div id="wheel-view-container" class="wheel-container" style="display:none;">
-                    <div class="wheel-wrapper">
-                        <div id="wheel-outer" class="wheel outer-wheel"></div>
-                        <div id="wheel-inner" class="wheel inner-wheel"></div>
-                    </div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Luar: Asli (Plain) | Dalam: Tergeser (Cipher)</div>
-                </div>
-
-                <!-- Realtime Detective Slider Controls -->
-                <div id="detective-controls" style="display:none;">
-                    <div class="live-decrypt-box">
-                        <div style="font-size:11px; color:var(--primary-cyan); margin-bottom:5px;">PREVIEW DEKRIPSI REAL-TIME:</div>
-                        <div id="detective-live-text" style="font-size:20px; font-weight:bold; letter-spacing:2px; color:#fff;">-</div>
-                    </div>
-                    <div class="shift-controls">
-                        <button class="btn btn-secondary" onclick="app.adjustDetectiveShift(-1)">◀ Shift Kiri</button>
-                        <input type="range" id="detective-slider" class="shift-slider" min="1" max="25" value="1" oninput="app.onDetectiveSliderChange(this.value)">
-                        <button class="btn btn-secondary" onclick="app.adjustDetectiveShift(1)">Shift Kanan ▶</button>
-                    </div>
-                    <div style="text-align:center; font-weight:bold; margin-bottom:15px;" id="detective-shift-val">Pilihan Shift: 1</div>
-                </div>
-
-                <!-- Multiple Choice Controls -->
-                <div id="mc-options-container" class="options-grid"></div>
-
-                <!-- Text Input Controls -->
-                <div id="text-input-container" style="display:none; margin-bottom:20px;">
-                    <input type="text" id="game-text-answer" class="input-control" placeholder="Ketik jawabanmu di sini..." autocomplete="off">
-                    <button class="btn" id="btn-submit-text" style="width:100%; margin-top:10px;">KIRIM JAWABAN</button>
-                </div>
-
-                <!-- Hints System -->
-                <div class="hint-bar">
-                    <button class="hint-btn" onclick="app.useHint('firstLetter')">💡 Huruf Pertama (15 Coins)</button>
-                    <button class="hint-btn" onclick="app.useHint('length')">📏 Panjang Kata (10 Coins)</button>
-                    <button class="hint-btn" onclick="app.useHint('category')">🏷️ Kategori (10 Coins)</button>
-                </div>
-
-                <div style="margin-top:20px; text-align:right;">
-                    <button class="btn btn-secondary" onclick="app.exitToMenu()">🏳️ Menyerah / Kembali</button>
-                </div>
-            </section>
-
-            <!-- 4. DASHBOARD & LEADERBOARD VIEW -->
-            <section id="view-dashboard" class="view glass-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2>Agent Dashboard & Records</h2>
-                    <button class="btn btn-secondary" onclick="app.showView('view-menu')">◀ Kembali ke Menu</button>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="lbl">Total Skor</div>
-                        <div class="val" id="dash-score">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="lbl">Akurasi Jawaban</div>
-                        <div class="val" id="dash-accuracy">0%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="lbl">Soal Selesai</div>
-                        <div class="val" id="dash-solved">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="lbl">Total Waktu Bermain</div>
-                        <div class="val" id="dash-time">0s</div>
-                    </div>
-                </div>
-
-                <h3 style="margin-bottom:10px; color:var(--primary-cyan);">Pencapaian Lencana (Achievements)</h3>
-                <div class="badge-grid" id="badge-container"></div>
-
-                <h3 style="margin:25px 0 10px 0; color:var(--primary-cyan);">Grafik Perkembangan Skor</h3>
-                <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:12px; border:var(--glass-border);">
-                    <canvas id="score-chart" height="150" style="width:100%;"></canvas>
-                </div>
-
-                <h3 style="margin:25px 0 10px 0; color:var(--primary-cyan);">Leaderboard Lokal</h3>
-                <div style="overflow-x:auto;">
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Agen</th>
-                                <th>Skor</th>
-                                <th>Akurasi</th>
-                                <th>Tanggal</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- 5. PLAYGROUND VIEW -->
-            <section id="view-playground" class="view glass-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2>Cipher Playground & Step Visualizer</h2>
-                    <button class="btn btn-secondary" onclick="app.showView('view-menu')">◀ Kembali ke Menu</button>
-                </div>
-
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
-                    <div>
-                        <div class="input-group">
-                            <label>TEKS ASLI (PLAINTEXT):</label>
-                            <input type="text" id="pg-text" class="input-control" value="INFORMATIKA">
-                        </div>
-                        <div class="input-group">
-                            <label>NILAI SHIFT (1 - 25): <span id="pg-shift-val" style="color:var(--primary-cyan);">3</span></label>
-                            <input type="range" id="pg-shift" class="shift-slider" min="1" max="25" value="3" oninput="document.getElementById('pg-shift-val').innerText=this.value; app.runPlayground();">
-                        </div>
-                        <div style="display:flex; gap:10px;">
-                            <button class="btn" style="flex:1;" onclick="app.runPlayground('encrypt')">🔒 ENKRIPSI</button>
-                            <button class="btn btn-secondary" style="flex:1;" onclick="app.runPlayground('decrypt')">🔓 DEKRIPSI</button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="challenge-box">
-                            <div style="font-size:12px; color:var(--text-muted);">HASIL TRANSFORMASI:</div>
-                            <div id="pg-result" class="cipher-display" style="color:var(--primary-cyan);">LQIROPDWLND</div>
-                        </div>
-                    </div>
-                </div>
-
-                <h3 style="margin-top:25px; color:var(--primary-purple);">Visualisasi Langkah Demi Langkah</h3>
-                <div id="pg-steps-container" class="step-container"></div>
+                <h3 style="margin-top:20px; color:var(--primary-cyan); font-size:16px;">Visualisasi Langkah Per Huruf:</h3>
+                <div id="pg-steps" class="step-container"></div>
             </section>
         </main>
     </div>
 
-    <!-- MODAL OVERLAY (Game Over / Victory / Dialogs) -->
+    <!-- MODAL NOTIFICATION / GAME OVER -->
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal-content">
-            <div id="modal-icon" style="font-size:50px; margin-bottom:10px;">🎉</div>
-            <h2 id="modal-title" style="color:var(--primary-cyan); margin-bottom:10px;">MISI SELESAI</h2>
-            <p id="modal-body" style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;"></p>
-            <div id="modal-stats" style="margin-bottom:20px;"></div>
-            <button class="btn" id="modal-btn-action" style="width:100%;">LANJUTKAN</button>
+            <h2 id="modal-title" style="color: var(--primary-cyan); margin-bottom: 10px;">MISI SELESAI</h2>
+            <p id="modal-msg" style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Laporan evaluasi misi kamu.</p>
+            <div id="modal-stats" style="margin-bottom: 25px; text-align: left; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px;"></div>
+            <button class="btn" id="modal-action-btn" onclick="app.closeModal()">LANJUTKAN</button>
         </div>
     </div>
 
-    <!-- AUDIO SYNTHESIZER & GAME ENGINE JS -->
+    <!-- JAVASCRIPT GAME ENGINE -->
     <script>
-        /* ==========================================================================
-           AUDIO SYNTHESIZER (WEB AUDIO API) - Offline Pure JS Sound Effects
-           ========================================================================== */
+        // Sound Synthesizer using Web Audio API
         class SoundEngine {
             constructor() {
                 this.ctx = null;
-                this.muted = false;
+                this.enabled = true;
             }
 
             init() {
@@ -994,8 +73,8 @@
                 }
             }
 
-            playTone(freq, type, duration) {
-                if (this.muted) return;
+            playBeep(freq = 440, type = 'sine', duration = 0.1) {
+                if (!this.enabled) return;
                 this.init();
                 try {
                     const osc = this.ctx.createOscillator();
@@ -1008,2663 +87,628 @@
                     gain.connect(this.ctx.destination);
                     osc.start();
                     osc.stop(this.ctx.currentTime + duration);
-                } catch(e){}
+                } catch (e) {}
             }
 
-            playCorrect() {
-                this.playTone(523.25, 'sine', 0.1); // C5
-                setTimeout(() => this.playTone(659.25, 'sine', 0.15), 100); // E5
-                setTimeout(() => this.playTone(783.99, 'sine', 0.2), 200); // G5
+            playSuccess() {
+                if (!this.enabled) return;
+                this.playBeep(523.25, 'triangle', 0.1);
+                setTimeout(() => this.playBeep(659.25, 'triangle', 0.1), 100);
+                setTimeout(() => this.playBeep(783.99, 'triangle', 0.2), 200);
             }
 
-            playWrong() {
-                this.playTone(220, 'sawtooth', 0.15);
-                setTimeout(() => this.playTone(180, 'sawtooth', 0.25), 150);
-            }
-
-            playLevelUp() {
-                const freqs = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
-                freqs.forEach((f, i) => {
-                    setTimeout(() => this.playTone(f, 'triangle', 0.15), i * 80);
-                });
-            }
-
-            playGameOver() {
-                this.playTone(300, 'sawtooth', 0.2);
-                setTimeout(() => this.playTone(250, 'sawtooth', 0.2), 200);
-                setTimeout(() => this.playTone(200, 'sawtooth', 0.4), 400);
+            playFail() {
+                if (!this.enabled) return;
+                this.playBeep(220, 'sawtooth', 0.15);
+                setTimeout(() => this.playBeep(180, 'sawtooth', 0.25), 150);
             }
         }
 
-        const audio = new SoundEngine();
-
-        /* ==========================================================================
-           PARTICLE BACKGROUND ENGINE
-           ========================================================================== */
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        class Particle {
+        // Main Application & Logic Engine
+        class CipherEngine {
             constructor() {
-                this.reset();
-            }
-
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2 + 1;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
-                this.color = Math.random() > 0.5 ? '#00f3ff' : '#9d4edd';
-                this.alpha = Math.random() * 0.5 + 0.1;
-            }
-
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-                    this.reset();
-                }
-            }
-
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.alpha;
-                ctx.fillStyle = this.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        for (let i = 0; i < 60; i++) particles.push(new Particle());
-
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animateParticles);
-        }
-        animateParticles();
-
-        /* ==========================================================================
-           WORD DATABASE & GAME DATA
-           ========================================================================== */
-        const WORD_DATABASE = {
-            Sekolah: ["GURU", "SISWA", "KELAS", "BUKU", "BELAJAR", "SEKOLAH", "PENSIL", "UJIAN"],
-            Informatika: ["KODE", "DATA", "NETWORK", "SERVER", "BINARY", "PROGRAM", "HARDWARE", "SOFTWARE"],
-            Teknologi: ["ROBOT", "INTERNET", "SISTEM", "DIGITAL", "MODEM", "GADGET", "KOMPUTER", "LAPTOP"],
-            Indonesia: ["GARUDA", "MONAS", "JAKARTA", "TEGAL", "SEMARANG", "RAPI", "PANCASILA", "INDONESIA"],
-            Hewan: ["KUCING", "ANJING", "HARIMAU", "GAJAH", "BURUNG", "KELINCI", "PANTAI", "JAGUAR"],
-            Buah: ["PISANG", "MANGGA", "MELON", "ANGGUR", "APEL", "JERUK", "DURIAN", "PEPAYA"],
-            Profesi: ["DOKTER", "POLISI", "TENTARA", "PILOT", "PETANI", "AGEN", "DESAINER", "GURU"],
-            Sains: ["ATOM", "FOTON", "ENERGI", "GRAVITASI", "KIMIA", "BIOLOGI", "FISIKA", "PLANET"]
-        };
-
-        const ACHIEVEMENTS = [
-            { id: "beginner", icon: "🥉", name: "Cipher Beginner", desc: "Selesaikan 1 Soal Pertama" },
-            { id: "explorer", icon: "🥈", name: "Cipher Explorer", desc: "Mencapai Level Player 5" },
-            { id: "master", icon: "🥇", name: "Cipher Master", desc: "Mencapai Level Player 15" },
-            { id: "agent", icon: "🏆", name: "Secret Agent", desc: "Selesaikan Mode Escape Room" },
-            { id: "legend", icon: "👑", name: "Caesar Legend", desc: "Kalahkan Mainframe Boss" },
-            { id: "speed", icon: "🔥", name: "Speed Solver", desc: "Selesaikan Time Attack Mode" },
-            { id: "detective", icon: "🧠", name: "Cipher Detective", desc: "Selesaikan Mode Detective" },
-            { id: "impossible", icon: "💎", name: "Impossible Winner", desc: "Taklukkan Impossible Mode" }
-        ];
-
-        /* ==========================================================================
-           CORE CAESAR CIPHER UTILITIES
-           ========================================================================== */
-        const CaesarCipher = {
-            encrypt: (text, shift) => {
-                return text.split('').map(char => {
-                    const code = char.charCodeAt(0);
-                    // Uppercase
-                    if (code >= 65 && code <= 90) {
-                        return String.fromCharCode(((code - 65 + shift) % 26) + 65);
-                    }
-                    // Lowercase
-                    if (code >= 97 && code <= 122) {
-                        return String.fromCharCode(((code - 97 + shift) % 26) + 97);
-                    }
-                    // Numbers
-                    if (code >= 48 && code <= 57) {
-                        return String.fromCharCode(((code - 48 + shift) % 10) + 48);
-                    }
-                    return char;
-                }).join('');
-            },
-            decrypt: (text, shift) => {
-                return text.split('').map(char => {
-                    const code = char.charCodeAt(0);
-                    // Uppercase
-                    if (code >= 65 && code <= 90) {
-                        return String.fromCharCode(((code - 65 - shift + 26) % 26) + 65);
-                    }
-                    // Lowercase
-                    if (code >= 97 && code <= 122) {
-                        return String.fromCharCode(((code - 97 - shift + 26) % 26) + 97);
-                    }
-                    // Numbers
-                    if (code >= 48 && code <= 57) {
-                        return String.fromCharCode(((code - 48 - shift + 10) % 10) + 48);
-                    }
-                    return char;
-                }).join('');
-            }
-        };
-
-        /* ==========================================================================
-           MAIN GAME APPLICATION STATE & CONTROLLER
-           ========================================================================== */
-        class GameApp {
-            constructor() {
-                this.state = {
-                    name: "Agen Zero",
-                    level: 1,
-                    xp: 0,
-                    coins: 0,
-                    hearts: 3,
-                    score: 0,
-                    correctCount: 0,
-                    wrongCount: 0,
-                    totalTimePlayed: 0,
-                    unlockedBadges: [],
-                    scoreHistory: [],
-                    leaderboard: []
-                };
-
-                this.currentGame = null;
+                this.sound = new SoundEngine();
+                this.playerName = "Agen Secret";
+                this.xp = 0;
+                this.level = 1;
+                this.coins = 50;
+                this.hearts = 3;
+                this.totalScore = 0;
+                this.totalSolved = 0;
+                this.totalAttempts = 0;
+                this.correctAnswers = 0;
+                this.playTimeSeconds = 0;
                 this.timerInterval = null;
-                this.playTimerInterval = null;
+                this.globalTimer = null;
 
-                this.initLocalStorage();
-                this.bindEvents();
-                this.startGlobalTimer();
-            }
+                this.currentMode = null;
+                this.currentQuestionIndex = 0;
+                this.totalQuestions = 10;
+                this.currentQuestion = null;
+                this.modeTimer = 0;
 
-            initLocalStorage() {
-                const saved = localStorage.getItem('caesar_agent_state');
-                if (saved) {
-                    try {
-                        this.state = { ...this.state, ...JSON.parse(saved) };
-                    } catch(e){}
-                }
-                this.updateHUD();
-            }
-
-            saveState() {
-// Ganti dengan URL Google Apps Script milik Anda
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykRV6tXzkGk9moDIKUBL9_W-szjl8YGUuWIjTY16ZlXRUDiHIaRlOS9E5JI1NEBWk/exec";
-
-function kirimDataPeserta(nama, level, skor, akurasi) {
-  fetch(GOOGLE_SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      nama: nama,
-      level: level,
-      skor: skor,
-      akurasi: akurasi
-    })
-  })
-  .then(() => console.log("Data peserta berhasil dikirim ke Google Sheets!"))
-  .catch(err => console.error("Gagal mengirim data:", err));
-}
-            }
-
-            bindEvents() {
-                document.getElementById('btn-start-game').addEventListener('click', () => {
-                    const name = document.getElementById('player-name-input').value.trim();
-                    if (name) this.state.name = name;
-                    this.saveState();
-                    this.showView('view-menu');
-                });
-
-                document.getElementById('audio-toggle').addEventListener('click', (e) => {
-                    audio.muted = !audio.muted;
-                    e.target.innerText = audio.muted ? '🔇' : '🔊';
-                });
-
-                document.getElementById('btn-open-dashboard').addEventListener('click', () => {
-                    this.renderDashboard();
-                    this.showView('view-dashboard');
-                });
-
-                document.getElementById('btn-open-playground').addEventListener('click', () => {
-                    this.runPlayground();
-                    this.showView('view-playground');
-                });
-
-                document.getElementById('btn-submit-text').addEventListener('click', () => {
-                    this.checkTextAnswer();
-                });
-
-                document.getElementById('game-text-answer').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.checkTextAnswer();
-                });
-            }
-
-            startGlobalTimer() {
-                this.playTimerInterval = setInterval(() => {
-                    this.state.totalTimePlayed++;
-                }, 1000);
-            }
-
-            showView(viewId) {
-                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                document.getElementById(viewId).classList.add('active');
-                if (viewId === 'view-menu') {
-                    document.getElementById('welcome-agent-msg').innerText = `Selamat bertugas, Agen ${this.state.name}. Semua progress tersimpan otomatis.`;
-                }
-            }
-
-            updateHUD() {
-                document.getElementById('hud-level').innerText = `LVL ${this.state.level}`;
-                document.getElementById('hud-xp').innerText = this.state.xp;
-                document.getElementById('hud-coins').innerText = this.state.coins;
-                
-                let heartStr = '';
-                for (let i = 0; i < 3; i++) {
-                    heartStr += i < this.state.hearts ? '❤️' : '🖤';
-                }
-                document.getElementById('hud-hearts').innerText = heartStr;
-            }
-
-            addXP(amount) {
-                this.state.xp += amount;
-                const reqXP = this.state.level * 50;
-                if (this.state.xp >= reqXP) {
-                    this.state.xp -= reqXP;
-                    this.state.level++;
-                    audio.playLevelUp();
-                    this.showModal('🎉 LEVEL UP!', `Selamat Agen ${this.state.name}, kamu naik ke Level ${this.state.level}!`, '🚀 Lanjutkan');
-                }
-                this.saveState();
-            }
-
-            addCoins(amount) {
-                this.state.coins += amount;
-                this.saveState();
-            }
-
-            unlockBadge(badgeId) {
-                if (!this.state.unlockedBadges.includes(badgeId)) {
-                    this.state.unlockedBadges.push(badgeId);
-                    const b = ACHIEVEMENTS.find(x => x.id === badgeId);
-                    if (b) {
-                        this.showModal('🏅 LENCANA BARU!', `Kamu membuka lencana: ${b.icon} ${b.name}`, 'Mantap!');
-                    }
-                    this.saveState();
-                }
-            }
-
-            /* ==========================================================================
-               GAMEPLAY MODES ENGINE
-               ========================================================================== */
-            startMode(mode) {
-                this.state.hearts = 3;
-                this.updateHUD();
-
-                this.currentGame = {
-                    mode: mode,
-                    subLevel: 1,
-                    questionIndex: 0,
-                    totalQuestions: 10,
-                    timeRemaining: 60,
-                    currentQuestion: null,
-                    timer: null
-                };
-
-                document.getElementById('mc-options-container').style.display = 'none';
-                document.getElementById('text-input-container').style.display = 'none';
-                document.getElementById('detective-controls').style.display = 'none';
-                document.getElementById('wheel-view-container').style.display = 'none';
-                document.getElementById('game-timer').style.display = 'none';
-
-                if (mode === 'learn') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 1: BELAJAR SAMBIL BERMAIN';
-                    this.loadLearnSubLevel(1);
-                } else if (mode === 'timeattack') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 2: TIME ATTACK';
-                    this.currentGame.timeRemaining = 60;
-                    document.getElementById('game-timer').style.display = 'block';
-                    this.startTimer();
-                    this.nextGenericQuestion();
-                } else if (mode === 'escaperoom') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 3: ESCAPE ROOM (5 PINTU)';
-                    this.currentGame.totalQuestions = 5;
-                    this.nextGenericQuestion();
-                } else if (mode === 'boss') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 4: BOSS BATTLE';
-                    this.currentGame.totalQuestions = 3;
-                    this.nextBossQuestion();
-                } else if (mode === 'detective') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 5: CIPHER DETECTIVE';
-                    document.getElementById('detective-controls').style.display = 'block';
-                    this.nextDetectiveQuestion();
-                } else if (mode === 'impossible') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 6: IMPOSSIBLE MODE';
-                    this.currentGame.totalQuestions = 20;
-                    this.currentGame.timeRemaining = 300; // 5 Menit
-                    document.getElementById('game-timer').style.display = 'block';
-                    this.startTimer();
-                    this.nextImpossibleQuestion();
-                }
-
-                this.showView('view-gameplay');
-            }
-
-            startTimer() {
-                clearInterval(this.timerInterval);
-                this.timerInterval = setInterval(() => {
-                    this.currentGame.timeRemaining--;
-                    document.getElementById('game-timer').innerText = `⏳ ${this.currentGame.timeRemaining}s`;
-                    if (this.currentGame.timeRemaining <= 0) {
-                        clearInterval(this.timerInterval);
-                        this.handleGameOver("Waktu habis! Operasi gagal.");
-                    }
-                }, 1000);
-            }
-
-            /* --- MODE 1 SUBLEVELS --- */
-            loadLearnSubLevel(subLvl) {
-                this.currentGame.subLevel = subLvl;
-                this.currentGame.questionIndex = 0;
-
-                if (subLvl === 1) { // Huruf Tunggal
-                    this.nextSingleLetterQuestion();
-                } else if (subLvl === 2) { // Enkripsi Kata
-                    this.nextEncryptWordQuestion();
-                } else if (subLvl === 3) { // Dekripsi Kata
-                    this.nextDecryptWordQuestion();
-                } else if (subLvl === 4) { // Visual Wheel
-                    document.getElementById('wheel-view-container').style.display = 'flex';
-                    this.setupVisualWheel();
-                    this.nextDecryptWordQuestion();
-                }
-            }
-
-            nextSingleLetterQuestion() {
-                this.updateProgressUI(`Sub-Level 1: Huruf Tunggal (${this.currentGame.questionIndex + 1}/10)`);
-                const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                const char = alphabet[Math.floor(Math.random() * 26)];
-                const shift = Math.floor(Math.random() * 5) + 1;
-                const answer = CaesarCipher.encrypt(char, shift);
-
-                this.currentGame.currentQuestion = { answer: answer, hintCat: "Huruf Tunggal", plain: char };
-
-                document.getElementById('cipher-label').innerText = `ENKRIPSI HURUF: "${char}"`;
-                document.getElementById('cipher-display').innerText = char;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                // Options
-                const opts = [answer];
-                while(opts.length < 4) {
-                    const randC = alphabet[Math.floor(Math.random() * 26)];
-                    if (!opts.includes(randC)) opts.push(randC);
-                }
-                opts.sort(() => Math.random() - 0.5);
-
-                this.renderMultipleChoice(opts);
-            }
-
-            nextEncryptWordQuestion() {
-                this.updateProgressUI(`Sub-Level 2: Enkripsi Kata (${this.currentGame.questionIndex + 1}/10)`);
-                const { word, category } = this.getRandomWord();
-                const shift = Math.floor(Math.random() * 5) + 1;
-                const cipher = CaesarCipher.encrypt(word, shift);
-
-                this.currentGame.currentQuestion = { answer: cipher, word: word, hintCat: category };
-
-                document.getElementById('cipher-label').innerText = `ENKRIPSI KATA BERIKUT:`;
-                document.getElementById('cipher-display').innerText = word;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('mc-options-container').style.display = 'none';
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-                document.getElementById('game-text-answer').focus();
-            }
-
-            nextDecryptWordQuestion() {
-                this.updateProgressUI(`Sub-Level ${this.currentGame.subLevel}: Dekripsi Kata (${this.currentGame.questionIndex + 1}/10)`);
-                const { word, category } = this.getRandomWord();
-                const shift = Math.floor(Math.random() * 5) + 1;
-                const cipher = CaesarCipher.encrypt(word, shift);
-
-                this.currentGame.currentQuestion = { answer: word, hintCat: category, cipher: cipher };
-
-                document.getElementById('cipher-label').innerText = `DEKRIPSI CIPHERTEXT BERIKUT:`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('mc-options-container').style.display = 'none';
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-                document.getElementById('game-text-answer').focus();
-            }
-
-            /* --- OTHER MODES QUESTIONS --- */
-            nextGenericQuestion() {
-                this.updateProgressUI(`Soal ${this.currentGame.questionIndex + 1}/${this.currentGame.totalQuestions}`);
-                const { word, category } = this.getRandomWord();
-                const shift = Math.floor(Math.random() * 10) + 1;
-                const cipher = CaesarCipher.encrypt(word, shift);
-
-                this.currentGame.currentQuestion = { answer: word, hintCat: category, cipher: cipher };
-
-                document.getElementById('cipher-label').innerText = `DEKRIPSI KODE:`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-                document.getElementById('game-text-answer').focus();
-            }
-
-            nextBossQuestion() {
-                this.updateProgressUI(`MAINFRAME BOSS PHASING (${this.currentGame.questionIndex + 1}/3)`);
-                const sentences = [
-                    "MAINFRAME SERVER CIPHER HAS BEEN LOCKED",
-                    "AGENT DECRYPT THIS FIREWALL IMMEDIATELY",
-                    "VICTORY IS NEAR KEEP SOLVING THE CODE"
+                this.badges = [
+                    { id: 'first_win', name: 'Misi Pertama', icon: '🎯', desc: 'Selesaikan 1 misi', unlocked: false },
+                    { id: 'master_dec', name: 'Master Dekripsi', icon: '🔑', desc: 'Jawab 10 soal dengan benar', unlocked: false },
+                    { id: 'speed_demon', name: 'Kilat Sempurna', icon: '⚡', desc: 'Selesaikan Time Attack', unlocked: false },
+                    { id: 'boss_slayer', name: 'Mainframe Crusher', icon: '👾', desc: 'Kalahkan Boss Battle', unlocked: false }
                 ];
-                const plain = sentences[this.currentGame.questionIndex];
-                const shift = (this.currentGame.questionIndex + 1) * 3;
-                const cipher = CaesarCipher.encrypt(plain, shift);
 
-                this.currentGame.currentQuestion = { answer: plain, hintCat: "Kalimat Boss", cipher: cipher };
-
-                document.getElementById('cipher-label').innerText = `👾 SERANGAN FIREWALL BOSS:`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-            }
-
-            nextDetectiveQuestion() {
-                this.updateProgressUI(`Investigasi ${this.currentGame.questionIndex + 1}/5`);
-                const { word, category } = this.getRandomWord();
-                const secretShift = Math.floor(Math.random() * 20) + 1;
-                const cipher = CaesarCipher.encrypt(word, secretShift);
-
-                this.currentGame.currentQuestion = { answer: word, secretShift: secretShift, cipher: cipher, hintCat: category };
-
-                document.getElementById('cipher-label').innerText = `PIRANTI TERKUNCI (SHIFT RAHASIA):`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: ??? UNKNOWN ???`;
-
-                this.onDetectiveSliderChange(document.getElementById('detective-slider').value);
-
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-            }
-
-            nextImpossibleQuestion() {
-                this.updateProgressUI(`IMPOSSIBLE MISSION (${this.currentGame.questionIndex + 1}/20)`);
-                const complexPhrases = [
-                    "Agent007: Misi Rahasia #1",
-                    "Password: Caesar2026!",
-                    "Pesan Kritis 99% Terenkripsi",
-                    "Informatika SMP & SMA 2026",
-                    "Cyber Security Alpha-1"
+                this.wordBank = [
+                    "RAHASIA", "AGEN", "CIPHER", "SANDI", "ENKRIPSI", "DEKRIPSI", "SERVER",
+                    "KOMPUTER", "KODE", "HACKER", "JARINGAN", "INTERNET", "SECURITY", "DATA",
+                    "SYSTEM", "MATRIX", "LOCK", "KEY", "MATEMATIKA", "INFORMATIKA"
                 ];
-                const plain = complexPhrases[this.currentGame.questionIndex % complexPhrases.length];
-                const shift = Math.floor(Math.random() * 15) + 1;
-                const cipher = CaesarCipher.encrypt(plain, shift);
 
-                this.currentGame.currentQuestion = { answer: plain, hintCat: "Ekstrem", cipher: cipher };
-
-                document.getElementById('cipher-label').innerText = `PESAN SANGAT RAHASIA:`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-            }
-
-            /* --- ANSWER VERIFICATION & HANDLING --- */
-            renderMultipleChoice(options) {
-                const container = document.getElementById('mc-options-container');
-                container.style.display = 'grid';
-                container.innerHTML = '';
-                options.forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = 'option-btn';
-                    btn.innerText = opt;
-                    btn.onclick = () => this.verifyAnswer(opt);
-                    container.appendChild(btn);
-                });
-            }
-
-            checkTextAnswer() {
-                const val = document.getElementById('game-text-answer').value.trim();
-                this.verifyAnswer(val);
-            }
-
-            verifyAnswer(userAns) {
-                const q = this.currentGame.currentQuestion;
-                if (!q) return;
-
-                const isCorrect = userAns.toUpperCase() === q.answer.toUpperCase();
-
-                if (isCorrect) {
-                    audio.playCorrect();
-                    this.state.correctCount++;
-                    this.state.score += 100;
-                    this.addXP(20);
-                    this.addCoins(10);
-                    this.unlockBadge('beginner');
-
-                    this.currentGame.questionIndex++;
-
-                    // Progression Logic
-                    if (this.currentGame.mode === 'learn') {
-                        if (this.currentGame.questionIndex >= 10) {
-                            if (this.currentGame.subLevel < 4) {
-                                this.showModal('🏆 SUB-LEVEL SELESAI!', `Kamu menyelesaikan Sub-Level ${this.currentGame.subLevel}! Naik ke tingkat berikutnya.`, 'Lanjut');
-                                this.loadLearnSubLevel(this.currentGame.subLevel + 1);
-                            } else {
-                                this.handleWin("Selamat! Kamu berhasil menyelesaikan seluruh Mode Belajar & Main!");
-                            }
-                        } else {
-                            this.loadLearnSubLevel(this.currentGame.subLevel);
-                        }
-                    } else if (this.currentGame.mode === 'detective') {
-                        if (this.currentGame.questionIndex >= 5) {
-                            this.unlockBadge('detective');
-                            this.handleWin("Luar biasa Agen! Kamu berhasil mendekripsi semua kode rahasia!");
-                        } else {
-                            this.nextDetectiveQuestion();
-                        }
-                    } else if (this.currentGame.mode === 'boss') {
-                        if (this.currentGame.questionIndex >= 3) {
-                            this.unlockBadge('legend');
-                            this.handleWin("BOOM! Mainframe Boss berhasil dihancurkan!");
-                        } else {
-                            this.nextBossQuestion();
-                        }
-                    } else if (this.currentGame.mode === 'impossible') {
-                        if (this.currentGame.questionIndex >= 20) {
-                            this.unlockBadge('impossible');
-                            this.handleWin("LUAR BIASA APOTEOSIS! Kamu memenangkan IMPOSSIBLE MODE!");
-                        } else {
-                            this.nextImpossibleQuestion();
-                        }
-                    } else { // TimeAttack & EscapeRoom
-                        if (this.currentGame.questionIndex >= this.currentGame.totalQuestions) {
-                            if (this.currentGame.mode === 'escaperoom') this.unlockBadge('agent');
-                            if (this.currentGame.mode === 'timeattack') this.unlockBadge('speed');
-                            this.handleWin("Misi Berhasil Diselesaikan!");
-                        } else {
-                            this.nextGenericQuestion();
-                        }
-                    }
-
-                } else {
-                    audio.playWrong();
-                    this.state.wrongCount++;
-                    this.state.hearts--;
-                    this.updateHUD();
-
-                    if (this.state.hearts <= 0) {
-                        this.handleGameOver("Heart kamu telah habis!");
-                    } else {
-                        this.showModal('❌ JAWABAN SALAH', `Jawabanmu belum tepat. Sisa Heart: ${this.state.hearts}`, 'Coba Lagi');
-                    }
-                }
-            }
-
-            handleWin(msg) {
-                clearInterval(this.timerInterval);
-                audio.playLevelUp();
-                
-                // Record Score
-                this.state.scoreHistory.push(this.state.score);
-                this.state.leaderboard.push({
-                    name: this.state.name,
-                    score: this.state.score,
-                    accuracy: Math.round((this.state.correctCount / (this.state.correctCount + this.state.wrongCount || 1)) * 100) + '%',
-                    date: new Date().toLocaleDateString()
-                });
-                this.saveState();
-
-                this.showModal('🎉 MISI SUKSES!', `${msg}<br><br>Total Skor: <strong>${this.state.score}</strong>`, 'Ke Menu Utama', () => {
-                    this.showView('view-menu');
-                });
-            }
-
-            handleGameOver(reason) {
-                clearInterval(this.timerInterval);
-                audio.playGameOver();
-                this.showModal('💀 GAME OVER', `${reason}<br><br>Jangan menyerah Agen, coba lagi!`, 'Kembali ke Menu', () => {
-                    this.showView('view-menu');
-                });
-            }
-
-            /* --- HELPER TOOLS --- */
-            getRandomWord() {
-                const cats = Object.keys(WORD_DATABASE);
-                const cat = cats[Math.floor(Math.random() * cats.length)];
-                const words = WORD_DATABASE[cat];
-                const word = words[Math.floor(Math.random() * words.length)];
-                return { word, category: cat };
-            }
-
-            updateProgressUI(subTitle) {
-                document.getElementById('game-sub-info').innerText = subTitle;
-                const pct = (this.currentGame.questionIndex / this.currentGame.totalQuestions) * 100;
-                document.getElementById('game-progress-fill').style.width = `${pct}%`;
-            }
-
-            adjustDetectiveShift(dir) {
-                const slider = document.getElementById('detective-slider');
-                let val = parseInt(slider.value) + dir;
-                if (val < 1) val = 25;
-                if (val > 25) val = 1;
-                slider.value = val;
-                this.onDetectiveSliderChange(val);
-            }
-
-            onDetectiveSliderChange(val) {
-                document.getElementById('detective-shift-val').innerText = `Pilihan Shift: ${val}`;
-                const cipherText = document.getElementById('cipher-display').innerText;
-                const preview = CaesarCipher.decrypt(cipherText, parseInt(val));
-                document.getElementById('detective-live-text').innerText = preview;
-            }
-
-            useHint(type) {
-                const q = this.currentGame.currentQuestion;
-                if (!q) return;
-
-                if (type === 'firstLetter') {
-                    if (this.state.coins < 15) return alert("Coin tidak cukup!");
-                    this.addCoins(-15);
-                    const letter = (q.answer || q.word)[0];
-                    alert(`💡 Hint: Huruf pertama adalah "${letter}"`);
-                } else if (type === 'length') {
-                    if (this.state.coins < 10) return alert("Coin tidak cukup!");
-                    this.addCoins(-10);
-                    const len = (q.answer || q.word).length;
-                    alert(`📏 Hint: Panjang kata adalah ${len} huruf`);
-                } else if (type === 'category') {
-                    if (this.state.coins < 10) return alert("Coin tidak cukup!");
-                    this.addCoins(-10);
-                    alert(`🏷️ Hint: Kategori kata adalah "${q.hintCat}"`);
-                }
-            }
-
-            setupVisualWheel() {
-                const outer = document.getElementById('wheel-outer');
-                const inner = document.getElementById('wheel-inner');
-                outer.innerHTML = '';
-                inner.innerHTML = '';
-
-                const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                for (let i = 0; i < 26; i++) {
-                    const angle = (i / 26) * 360;
-
-                    const elO = document.createElement('div');
-                    elO.className = 'wheel-letter';
-                    elO.innerText = alpha[i];
-                    elO.style.transform = `rotate(${angle}deg) translateY(-110px) rotate(-${angle}deg)`;
-                    outer.appendChild(elO);
-
-                    const elI = document.createElement('div');
-                    elI.className = 'wheel-letter';
-                    elI.innerText = alpha[i];
-                    elI.style.transform = `rotate(${angle}deg) translateY(-75px) rotate(-${angle}deg)`;
-                    inner.appendChild(elI);
-                }
-            }
-
-            /* --- PLAYGROUND ENGINE --- */
-            runPlayground(mode = 'encrypt') {
-                const text = document.getElementById('pg-text').value.toUpperCase();
-                const shift = parseInt(document.getElementById('pg-shift').value);
-
-                const res = mode === 'encrypt' ? CaesarCipher.encrypt(text, shift) : CaesarCipher.decrypt(text, shift);
-                document.getElementById('pg-result').innerText = res;
-
-                const container = document.getElementById('pg-steps-container');
-                container.innerHTML = '';
-
-                for (let i = 0; i < text.length; i++) {
-                    const orig = text[i];
-                    const trans = res[i];
-                    const card = document.createElement('div');
-                    card.className = 'step-card';
-                    card.innerHTML = `<div class="orig">${orig}</div><div class="arrow">↓ (+${shift})</div><div class="res">${trans}</div>`;
-                    container.appendChild(card);
-                }
-            }
-
-            /* --- DASHBOARD RENDERER --- */
-            renderDashboard() {
-                document.getElementById('dash-score').innerText = this.state.score;
-                const total = this.state.correctCount + this.state.wrongCount;
-                const acc = total > 0 ? Math.round((this.state.correctCount / total) * 100) : 0;
-                document.getElementById('dash-accuracy').innerText = `${acc}%`;
-                document.getElementById('dash-solved').innerText = this.state.correctCount;
-                document.getElementById('dash-time').innerText = `${this.state.totalTimePlayed}s`;
-
-                // Badges
-                const bContainer = document.getElementById('badge-container');
-                bContainer.innerHTML = '';
-                ACHIEVEMENTS.forEach(ach => {
-                    const unlocked = this.state.unlockedBadges.includes(ach.id);
-                    const div = document.createElement('div');
-                    div.className = `badge-item ${unlocked ? 'unlocked' : ''}`;
-                    div.innerHTML = `<div class="badge-icon">${ach.icon}</div><div class="badge-name">${ach.name}</div>`;
-                    bContainer.appendChild(div);
-                });
-
-                // Leaderboard
-                const lbBody = document.getElementById('leaderboard-body');
-                lbBody.innerHTML = '';
-                this.state.leaderboard.sort((a,b) => b.score - a.score).slice(0, 5).forEach((item, idx) => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${idx + 1}</td><td>${item.name}</td><td>${item.score}</td><td>${item.accuracy}</td><td>${item.date}</td>`;
-                    lbBody.appendChild(tr);
-                });
-
-                // Render Chart
-                this.renderChart();
-            }
-
-            renderChart() {
-                const canvas = document.getElementById('score-chart');
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                const data = this.state.scoreHistory.slice(-10);
-                if (data.length < 2) {
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.font = '12px sans-serif';
-                    ctx.fillText("Mainkan beberapa permainan untuk melihat grafik perkembangan.", 20, 80);
-                    return;
-                }
-
-                ctx.strokeStyle = '#00f3ff';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-
-                const max = Math.max(...data, 100);
-                const stepX = canvas.width / (data.length - 1);
-
-                data.forEach((val, i) => {
-                    const x = i * stepX;
-                    const y = canvas.height - (val / max) * (canvas.height - 30) - 15;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                });
-                ctx.stroke();
-            }
-
-            /* --- MODAL DIALOGS --- */
-            showModal(title, bodyHtml, btnText, callback = null) {
-                document.getElementById('modal-title').innerHTML = title;
-                document.getElementById('modal-body').innerHTML = bodyHtml;
-                const btn = document.getElementById('modal-btn-action');
-                btn.innerText = btnText;
-
-                const overlay = document.getElementById('modal-overlay');
-                overlay.classList.add('active');
-
-                btn.onclick = () => {
-                    overlay.classList.remove('active');
-                    if (callback) callback();
-                };
-            }
-
-            exitToMenu() {
-                clearInterval(this.timerInterval);
-                this.showView('view-menu');
-            }
-        }
-
-        // Initialize App Globally
-        const app = new GameApp();
-    </script>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caesar Cipher Challenge: Secret Agent Mission</title>
-    <style>
-        :root {
-            --bg-dark: #0a0e17;
-            --card-bg: rgba(16, 24, 40, 0.75);
-            --border-glow: rgba(0, 243, 255, 0.3);
-            --primary-cyan: #00f3ff;
-            --primary-purple: #9d4edd;
-            --primary-blue: #3a86ff;
-            --accent-pink: #ff007f;
-            --accent-yellow: #ffd166;
-            --text-main: #f8f9fa;
-            --text-muted: #94a3b8;
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            user-select: none;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Particle Canvas */
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* Container Layout */
-        .app-container {
-            width: 100%;
-            max-width: 1100px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 1;
-        }
-
-        /* Header Navigation */
-        header {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: var(--glass-border);
-            border-bottom: 2px solid var(--primary-cyan);
-            border-radius: 16px;
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-logo {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 0 15px var(--primary-cyan);
-        }
-
-        .brand-title h1 {
-            font-size: 18px;
-            background: linear-gradient(90deg, var(--primary-cyan), #ffffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
-        }
-
-        .brand-title p {
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 2px;
-        }
-
-        .user-hud {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .hud-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: var(--glass-border);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .hud-item.coins { color: var(--accent-yellow); border-color: rgba(255, 209, 102, 0.3); }
-        .hud-item.xp { color: var(--primary-cyan); border-color: rgba(0, 243, 255, 0.3); }
-        .hud-item.hearts { color: var(--accent-pink); border-color: rgba(255, 0, 127, 0.3); }
-
-        .audio-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-size: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .audio-btn:hover { transform: scale(1.1); color: var(--primary-cyan); }
-
-        /* Card Glassmorphism Base */
-        .glass-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            border: var(--glass-border);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .glow-effect {
-            box-shadow: 0 0 20px var(--border-glow);
-        }
-
-        /* Buttons */
-        .btn {
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            font-size: 15px;
-            font-weight: 700;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(58, 134, 255, 0.4);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 243, 255, 0.6);
-            filter: brightness(1.1);
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: none;
-            border: var(--glass-border);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #e63946, #d62828);
-            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
-        }
-
-        /* Dynamic Views */
-        .view {
-            display: none;
-            animation: fadeIn 0.4s ease-in-out forwards;
-        }
-
-        .view.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Intro Screen */
-        .intro-screen {
-            text-align: center;
-            max-width: 650px;
-            margin: 40px auto;
-        }
-
-        .intro-title {
-            font-size: 32px;
-            margin-bottom: 15px;
-            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .story-box {
-            background: rgba(0, 0, 0, 0.4);
-            border-left: 4px solid var(--primary-cyan);
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: left;
-            line-height: 1.6;
-            color: #cbd5e1;
-            font-size: 15px;
-        }
-
-        .input-group {
-            margin: 25px 0;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--primary-cyan);
-            letter-spacing: 1px;
-        }
-
-        .input-control {
-            width: 100%;
-            padding: 14px 18px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--primary-cyan);
-            border-radius: 10px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .input-control:focus {
-            box-shadow: 0 0 15px var(--primary-cyan);
-        }
-
-        /* Main Menu Dashboard Grid */
-        .mode-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .mode-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: var(--glass-border);
-            border-radius: 18px;
-            padding: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .mode-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--primary-cyan);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 243, 255, 0.2);
-        }
-
-        .mode-card h3 {
-            font-size: 18px;
-            color: var(--primary-cyan);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .mode-card p {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.4;
-            margin-bottom: 15px;
-        }
-
-        .mode-badge {
-            align-self: flex-start;
-            font-size: 10px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: rgba(0, 243, 255, 0.1);
-            color: var(--primary-cyan);
-            border: 1px solid var(--primary-cyan);
-            text-transform: uppercase;
-        }
-
-        /* Gameplay Container */
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .game-title {
-            font-size: 20px;
-            color: var(--primary-cyan);
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 25px;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-purple));
-            transition: width 0.3s ease;
-        }
-
-        .challenge-box {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 16px;
-            padding: 25px;
-            text-align: center;
-            margin-bottom: 25px;
-            border: 1px dashed var(--border-glow);
-            position: relative;
-        }
-
-        .cipher-display {
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 4px;
-            color: #ffffff;
-            margin: 15px 0;
-            word-break: break-all;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .shift-info {
-            display: inline-block;
-            background: rgba(157, 78, 221, 0.2);
-            color: var(--primary-purple);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            border: 1px solid var(--primary-purple);
-        }
-
-        /* Option Grid for Multiple Choice */
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .option-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: var(--glass-border);
-            padding: 16px;
-            border-radius: 12px;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .option-btn:hover {
-            background: rgba(0, 243, 255, 0.15);
-            border-color: var(--primary-cyan);
-            transform: scale(1.02);
-        }
-
-        /* Visual Cipher Wheel */
-        .wheel-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-            position: relative;
-        }
-
-        .wheel-wrapper {
-            position: relative;
-            width: 260px;
-            height: 260px;
-            margin-bottom: 20px;
-        }
-
-        .wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .outer-wheel {
-            border: 2px solid var(--primary-cyan);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-        }
-
-        .inner-wheel {
-            width: 70%;
-            height: 70%;
-            top: 15%;
-            left: 15%;
-            border: 2px solid var(--primary-purple);
-            box-shadow: 0 0 15px rgba(157, 78, 221, 0.3);
-            background: rgba(10, 14, 23, 0.8);
-        }
-
-        .wheel-letter {
-            position: absolute;
-            font-weight: bold;
-            font-size: 12px;
-            transform-origin: center center;
-        }
-
-        .outer-wheel .wheel-letter { color: var(--primary-cyan); }
-        .inner-wheel .wheel-letter { color: var(--primary-purple); }
-
-        /* Real-time Detective Controls */
-        .shift-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto 20px auto;
-        }
-
-        .shift-slider {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            outline: none;
-        }
-
-        .shift-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: var(--primary-cyan);
-            cursor: pointer;
-            box-shadow: 0 0 10px var(--primary-cyan);
-        }
-
-        .live-decrypt-box {
-            background: rgba(0, 243, 255, 0.05);
-            border: 1px solid var(--primary-cyan);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            min-height: 60px;
-        }
-
-        /* Hints System */
-        .hint-bar {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .hint-btn {
-            background: rgba(255, 209, 102, 0.1);
-            border: 1px solid var(--accent-yellow);
-            color: var(--accent-yellow);
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .hint-btn:hover {
-            background: rgba(255, 209, 102, 0.25);
-        }
-
-        /* Dashboard & Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 12px;
-            border: var(--glass-border);
-            text-align: center;
-        }
-
-        .stat-card .val {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--primary-cyan);
-            margin-top: 5px;
-        }
-
-        .stat-card .lbl {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .badge-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .badge-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: var(--glass-border);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            opacity: 0.4;
-            filter: grayscale(1);
-            transition: 0.3s;
-        }
-
-        .badge-item.unlocked {
-            opacity: 1;
-            filter: grayscale(0);
-            border-color: var(--accent-yellow);
-            background: rgba(255, 209, 102, 0.05);
-            box-shadow: 0 0 10px rgba(255, 209, 102, 0.2);
-        }
-
-        .badge-icon {
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-
-        .badge-name {
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        /* Playground Steps Visualization */
-        .step-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .step-card {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--primary-purple);
-            border-radius: 8px;
-            padding: 8px 12px;
-            text-align: center;
-            animation: popIn 0.3s ease forwards;
-        }
-
-        @keyframes popIn {
-            from { transform: scale(0.7); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .step-card .orig { font-size: 12px; color: var(--text-muted); }
-        .step-card .arrow { font-size: 10px; color: var(--primary-cyan); margin: 2px 0; }
-        .step-card .res { font-size: 16px; font-weight: bold; color: var(--primary-cyan); }
-
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--primary-cyan);
-            border-radius: 24px;
-            padding: 35px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 0 30px var(--primary-cyan);
-            transform: scale(0.8);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-overlay.active .modal-content {
-            transform: scale(1);
-        }
-
-        /* Leaderboard Table */
-        .leaderboard-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            text-align: left;
-        }
-
-        .leaderboard-table th, .leaderboard-table td {
-            padding: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 14px;
-        }
-
-        .leaderboard-table th {
-            color: var(--primary-cyan);
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .app-container { padding: 10px; }
-            header { flex-direction: column; align-items: flex-start; }
-            .user-hud { width: 100%; justify-content: space-between; }
-            .cipher-display { font-size: 22px; letter-spacing: 2px; }
-            .glass-card { padding: 20px; }
-        }
-    </style>
-</head>
-<body>
-
-    <canvas id="particle-canvas"></canvas>
-
-    <div class="app-container">
-        <!-- TOP HUD / HEADER -->
-        <header>
-            <div class="brand">
-                <div class="brand-logo">🔒</div>
-                <div class="brand-title">
-                    <h1>CIPHER AGENT</h1>
-                    <p>SECRET MISSION</p>
-                </div>
-            </div>
-
-            <div class="user-hud">
-                <div class="hud-item xp">⭐ <span id="hud-level">LVL 1</span> (<span id="hud-xp">0</span> XP)</div>
-                <div class="hud-item coins">🪙 <span id="hud-coins">0</span></div>
-                <div class="hud-item hearts"><span id="hud-hearts">❤️❤️❤️</span></div>
-                <button class="audio-btn" id="audio-toggle" title="Toggle Sound">🔊</button>
-            </div>
-        </header>
-
-        <!-- MAIN NAVIGATION CONTENT -->
-        <main>
-            <!-- 1. INTRO / WELCOME VIEW -->
-            <section id="view-intro" class="view glass-card glow-effect intro-screen active">
-                <h2 class="intro-title">Misi Agen Rahasia</h2>
-                <p style="color: var(--text-muted); font-size: 14px;">Caesar Cipher Encryption Challenge</p>
-                
-                <div class="story-box">
-                    "Selamat datang, Agen Cipher.<br><br>
-                    Sebuah organisasi rahasia telah mengirimkan banyak pesan terenkripsi menggunakan Caesar Cipher.<br><br>
-                    Tugasmu adalah memecahkan seluruh pesan tersebut sebelum waktu habis. Setiap misi akan semakin sulit.<br><br>
-                    Apakah kamu siap menjadi <strong>Cipher Master</strong>?"
-                </div>
-
-                <div class="input-group">
-                    <label for="player-name-input">IDENTITAS AGEN (NAMA):</label>
-                    <input type="text" id="player-name-input" class="input-control" placeholder="Masukkan nama panggilanmu..." maxlength="15">
-                </div>
-
-                <button class="btn" id="btn-start-game">▶ MULAI MISI</button>
-            </section>
-
-            <!-- 2. MAIN MENU / DASHBOARD VIEW -->
-            <section id="view-menu" class="view glass-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
-                    <div>
-                        <h2>Pilih Misi Operasi</h2>
-                        <p style="color: var(--text-muted); font-size: 13px;" id="welcome-agent-msg">Selamat datang kembali, Agen.</p>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-secondary" id="btn-open-dashboard">📊 Dashboard</button>
-                        <button class="btn btn-secondary" id="btn-open-playground">🧪 Playground</button>
-                    </div>
-                </div>
-
-                <div class="mode-grid">
-                    <div class="mode-card" onclick="app.startMode('learn')">
-                        <div>
-                            <span class="mode-badge">MODE 1</span>
-                            <h3>📚 Belajar & Main</h3>
-                            <p>Progresi 4 Level: Huruf Tunggal, Enkripsi, Dekripsi, dan Visual Cipher Wheel.</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('timeattack')">
-                        <div>
-                            <span class="mode-badge" style="border-color:var(--accent-pink); color:var(--accent-pink);">MODE 2</span>
-                            <h3>⏱️ Time Attack</h3>
-                            <p>Batas waktu 60 detik. Dekripsi kata sebanyak mungkin untuk skor tertinggi.</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('escaperoom')">
-                        <div>
-                            <span class="mode-badge" style="border-color:var(--accent-yellow); color:var(--accent-yellow);">MODE 3</span>
-                            <h3>🚪 Escape Room</h3>
-                            <p>Buka 5 pintu keamanan berurutan dengan memecahkan kode sandi.</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('boss')">
-                        <div>
-                            <span class="mode-badge" style="border-color:#ff4757; color:#ff4757;">MODE 4</span>
-                            <h3>👾 Boss Battle</h3>
-                            <p>Kalahkan Mainframe Boss dengan mendekripsi kalimat komplit dalam serangan cepat.</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('detective')">
-                        <div>
-                            <span class="mode-badge" style="border-color:var(--primary-purple); color:var(--primary-purple);">MODE 5</span>
-                            <h3>🔍 Cipher Detective</h3>
-                            <p>Mode Pakar. Kunci Shift disembunyikan. Gunakan Slider Dekripsi Real-time!</p>
-                        </div>
-                        <button class="btn" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-
-                    <div class="mode-card" onclick="app.startMode('impossible')">
-                        <div>
-                            <span class="mode-badge" style="border-color:#ff0000; color:#ff0000;">MODE 6</span>
-                            <h3>🔥 Impossible Mode</h3>
-                            <p>20 Soal ekstrem. Tanda baca, kapitalisasi, dan angka. Waktu 5 Menit!</p>
-                        </div>
-                        <button class="btn btn-danger" style="width:100%; margin-top:10px;">MAINKAN</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. GAMEPLAY SCREEN -->
-            <section id="view-gameplay" class="view glass-card glow-effect">
-                <div class="game-header">
-                    <div>
-                        <span id="game-mode-title" class="game-title">MODE PLAY</span>
-                        <div id="game-sub-info" style="font-size:12px; color:var(--text-muted);">Level 1 - Question 1/10</div>
-                    </div>
-                    <div id="game-timer" style="font-size:22px; font-weight:bold; color:var(--accent-yellow);">⏳ --</div>
-                </div>
-
-                <div class="progress-bar-container">
-                    <div id="game-progress-fill" class="progress-bar-fill"></div>
-                </div>
-
-                <!-- Challenge Visual Display -->
-                <div class="challenge-box">
-                    <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;" id="cipher-label">Pesan Terenkripsi (Ciphertext)</div>
-                    <div id="cipher-display" class="cipher-display">KHOOR</div>
-                    <div id="shift-info" class="shift-info">Shift Key: +3</div>
-                </div>
-
-                <!-- Visual Wheel Container (For Mode 1 Level 4 & Interactive Needs) -->
-                <div id="wheel-view-container" class="wheel-container" style="display:none;">
-                    <div class="wheel-wrapper">
-                        <div id="wheel-outer" class="wheel outer-wheel"></div>
-                        <div id="wheel-inner" class="wheel inner-wheel"></div>
-                    </div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Luar: Asli (Plain) | Dalam: Tergeser (Cipher)</div>
-                </div>
-
-                <!-- Realtime Detective Slider Controls -->
-                <div id="detective-controls" style="display:none;">
-                    <div class="live-decrypt-box">
-                        <div style="font-size:11px; color:var(--primary-cyan); margin-bottom:5px;">PREVIEW DEKRIPSI REAL-TIME:</div>
-                        <div id="detective-live-text" style="font-size:20px; font-weight:bold; letter-spacing:2px; color:#fff;">-</div>
-                    </div>
-                    <div class="shift-controls">
-                        <button class="btn btn-secondary" onclick="app.adjustDetectiveShift(-1)">◀ Shift Kiri</button>
-                        <input type="range" id="detective-slider" class="shift-slider" min="1" max="25" value="1" oninput="app.onDetectiveSliderChange(this.value)">
-                        <button class="btn btn-secondary" onclick="app.adjustDetectiveShift(1)">Shift Kanan ▶</button>
-                    </div>
-                    <div style="text-align:center; font-weight:bold; margin-bottom:15px;" id="detective-shift-val">Pilihan Shift: 1</div>
-                </div>
-
-                <!-- Multiple Choice Controls -->
-                <div id="mc-options-container" class="options-grid"></div>
-
-                <!-- Text Input Controls -->
-                <div id="text-input-container" style="display:none; margin-bottom:20px;">
-                    <input type="text" id="game-text-answer" class="input-control" placeholder="Ketik jawabanmu di sini..." autocomplete="off">
-                    <button class="btn" id="btn-submit-text" style="width:100%; margin-top:10px;">KIRIM JAWABAN</button>
-                </div>
-
-                <!-- Hints System -->
-                <div class="hint-bar">
-                    <button class="hint-btn" onclick="app.useHint('firstLetter')">💡 Huruf Pertama (15 Coins)</button>
-                    <button class="hint-btn" onclick="app.useHint('length')">📏 Panjang Kata (10 Coins)</button>
-                    <button class="hint-btn" onclick="app.useHint('category')">🏷️ Kategori (10 Coins)</button>
-                </div>
-
-                <div style="margin-top:20px; text-align:right;">
-                    <button class="btn btn-secondary" onclick="app.exitToMenu()">🏳️ Menyerah / Kembali</button>
-                </div>
-            </section>
-
-            <!-- 4. DASHBOARD & LEADERBOARD VIEW -->
-            <section id="view-dashboard" class="view glass-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2>Agent Dashboard & Records</h2>
-                    <button class="btn btn-secondary" onclick="app.showView('view-menu')">◀ Kembali ke Menu</button>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="lbl">Total Skor</div>
-                        <div class="val" id="dash-score">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="lbl">Akurasi Jawaban</div>
-                        <div class="val" id="dash-accuracy">0%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="lbl">Soal Selesai</div>
-                        <div class="val" id="dash-solved">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="lbl">Total Waktu Bermain</div>
-                        <div class="val" id="dash-time">0s</div>
-                    </div>
-                </div>
-
-                <h3 style="margin-bottom:10px; color:var(--primary-cyan);">Pencapaian Lencana (Achievements)</h3>
-                <div class="badge-grid" id="badge-container"></div>
-
-                <h3 style="margin:25px 0 10px 0; color:var(--primary-cyan);">Grafik Perkembangan Skor</h3>
-                <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:12px; border:var(--glass-border);">
-                    <canvas id="score-chart" height="150" style="width:100%;"></canvas>
-                </div>
-
-                <h3 style="margin:25px 0 10px 0; color:var(--primary-cyan);">Leaderboard Lokal</h3>
-                <div style="overflow-x:auto;">
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Agen</th>
-                                <th>Skor</th>
-                                <th>Akurasi</th>
-                                <th>Tanggal</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- 5. PLAYGROUND VIEW -->
-            <section id="view-playground" class="view glass-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2>Cipher Playground & Step Visualizer</h2>
-                    <button class="btn btn-secondary" onclick="app.showView('view-menu')">◀ Kembali ke Menu</button>
-                </div>
-
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
-                    <div>
-                        <div class="input-group">
-                            <label>TEKS ASLI (PLAINTEXT):</label>
-                            <input type="text" id="pg-text" class="input-control" value="INFORMATIKA">
-                        </div>
-                        <div class="input-group">
-                            <label>NILAI SHIFT (1 - 25): <span id="pg-shift-val" style="color:var(--primary-cyan);">3</span></label>
-                            <input type="range" id="pg-shift" class="shift-slider" min="1" max="25" value="3" oninput="document.getElementById('pg-shift-val').innerText=this.value; app.runPlayground();">
-                        </div>
-                        <div style="display:flex; gap:10px;">
-                            <button class="btn" style="flex:1;" onclick="app.runPlayground('encrypt')">🔒 ENKRIPSI</button>
-                            <button class="btn btn-secondary" style="flex:1;" onclick="app.runPlayground('decrypt')">🔓 DEKRIPSI</button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="challenge-box">
-                            <div style="font-size:12px; color:var(--text-muted);">HASIL TRANSFORMASI:</div>
-                            <div id="pg-result" class="cipher-display" style="color:var(--primary-cyan);">LQIROPDWLND</div>
-                        </div>
-                    </div>
-                </div>
-
-                <h3 style="margin-top:25px; color:var(--primary-purple);">Visualisasi Langkah Demi Langkah</h3>
-                <div id="pg-steps-container" class="step-container"></div>
-            </section>
-        </main>
-    </div>
-
-    <!-- MODAL OVERLAY (Game Over / Victory / Dialogs) -->
-    <div id="modal-overlay" class="modal-overlay">
-        <div class="modal-content">
-            <div id="modal-icon" style="font-size:50px; margin-bottom:10px;">🎉</div>
-            <h2 id="modal-title" style="color:var(--primary-cyan); margin-bottom:10px;">MISI SELESAI</h2>
-            <p id="modal-body" style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;"></p>
-            <div id="modal-stats" style="margin-bottom:20px;"></div>
-            <button class="btn" id="modal-btn-action" style="width:100%;">LANJUTKAN</button>
-        </div>
-    </div>
-
-    <!-- AUDIO SYNTHESIZER & GAME ENGINE JS -->
-    <script>
-        /* ==========================================================================
-           AUDIO SYNTHESIZER (WEB AUDIO API) - Offline Pure JS Sound Effects
-           ========================================================================== */
-        class SoundEngine {
-            constructor() {
-                this.ctx = null;
-                this.muted = false;
+                this.sentenceBank = [
+                    "KIRIM PASUKAN KELOKASI RAHASIA",
+                    "AMANKAN DOKUMEN DENGAN ENKRIPSI",
+                    "KODE HACKER TELAH DIDETEKSI",
+                    "SISTEM KEAMANAN DALAM BAHAYA",
+                    "TUGAS AGEN ADALAH MENJAGA DATA"
+                ];
+
+                this.impossibleBank = [
+                    "Agen #007: Misi Ke-2 Berhasil!",
+                    "Kunci Utama: X9-Cipher_2026",
+                    "Kriptografi Adalah Seni Memproteksi Data!",
+                    "Akses Ditolak! Masukkan Passcode: 9876",
+                    "Pesan Terakhir Dari Pusat... S.O.S!"
+                ];
             }
 
             init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            }
-
-            playTone(freq, type, duration) {
-                if (this.muted) return;
-                this.init();
-                try {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + duration);
-                } catch(e){}
-            }
-
-            playCorrect() {
-                this.playTone(523.25, 'sine', 0.1); // C5
-                setTimeout(() => this.playTone(659.25, 'sine', 0.15), 100); // E5
-                setTimeout(() => this.playTone(783.99, 'sine', 0.2), 200); // G5
-            }
-
-            playWrong() {
-                this.playTone(220, 'sawtooth', 0.15);
-                setTimeout(() => this.playTone(180, 'sawtooth', 0.25), 150);
-            }
-
-            playLevelUp() {
-                const freqs = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
-                freqs.forEach((f, i) => {
-                    setTimeout(() => this.playTone(f, 'triangle', 0.15), i * 80);
-                });
-            }
-
-            playGameOver() {
-                this.playTone(300, 'sawtooth', 0.2);
-                setTimeout(() => this.playTone(250, 'sawtooth', 0.2), 200);
-                setTimeout(() => this.playTone(200, 'sawtooth', 0.4), 400);
-            }
-        }
-
-        const audio = new SoundEngine();
-
-        /* ==========================================================================
-           PARTICLE BACKGROUND ENGINE
-           ========================================================================== */
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2 + 1;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
-                this.color = Math.random() > 0.5 ? '#00f3ff' : '#9d4edd';
-                this.alpha = Math.random() * 0.5 + 0.1;
-            }
-
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-                    this.reset();
-                }
-            }
-
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.alpha;
-                ctx.fillStyle = this.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        for (let i = 0; i < 60; i++) particles.push(new Particle());
-
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animateParticles);
-        }
-        animateParticles();
-
-        /* ==========================================================================
-           WORD DATABASE & GAME DATA
-           ========================================================================== */
-        const WORD_DATABASE = {
-            Sekolah: ["GURU", "SISWA", "KELAS", "BUKU", "BELAJAR", "SEKOLAH", "PENSIL", "UJIAN"],
-            Informatika: ["KODE", "DATA", "NETWORK", "SERVER", "BINARY", "PROGRAM", "HARDWARE", "SOFTWARE"],
-            Teknologi: ["ROBOT", "INTERNET", "SISTEM", "DIGITAL", "MODEM", "GADGET", "KOMPUTER", "LAPTOP"],
-            Indonesia: ["GARUDA", "MONAS", "JAKARTA", "TEGAL", "SEMARANG", "RAPI", "PANCASILA", "INDONESIA"],
-            Hewan: ["KUCING", "ANJING", "HARIMAU", "GAJAH", "BURUNG", "KELINCI", "PANTAI", "JAGUAR"],
-            Buah: ["PISANG", "MANGGA", "MELON", "ANGGUR", "APEL", "JERUK", "DURIAN", "PEPAYA"],
-            Profesi: ["DOKTER", "POLISI", "TENTARA", "PILOT", "PETANI", "AGEN", "DESAINER", "GURU"],
-            Sains: ["ATOM", "FOTON", "ENERGI", "GRAVITASI", "KIMIA", "BIOLOGI", "FISIKA", "PLANET"]
-        };
-
-        const ACHIEVEMENTS = [
-            { id: "beginner", icon: "🥉", name: "Cipher Beginner", desc: "Selesaikan 1 Soal Pertama" },
-            { id: "explorer", icon: "🥈", name: "Cipher Explorer", desc: "Mencapai Level Player 5" },
-            { id: "master", icon: "🥇", name: "Cipher Master", desc: "Mencapai Level Player 15" },
-            { id: "agent", icon: "🏆", name: "Secret Agent", desc: "Selesaikan Mode Escape Room" },
-            { id: "legend", icon: "👑", name: "Caesar Legend", desc: "Kalahkan Mainframe Boss" },
-            { id: "speed", icon: "🔥", name: "Speed Solver", desc: "Selesaikan Time Attack Mode" },
-            { id: "detective", icon: "🧠", name: "Cipher Detective", desc: "Selesaikan Mode Detective" },
-            { id: "impossible", icon: "💎", name: "Impossible Winner", desc: "Taklukkan Impossible Mode" }
-        ];
-
-        /* ==========================================================================
-           CORE CAESAR CIPHER UTILITIES
-           ========================================================================== */
-        const CaesarCipher = {
-            encrypt: (text, shift) => {
-                return text.split('').map(char => {
-                    const code = char.charCodeAt(0);
-                    // Uppercase
-                    if (code >= 65 && code <= 90) {
-                        return String.fromCharCode(((code - 65 + shift) % 26) + 65);
-                    }
-                    // Lowercase
-                    if (code >= 97 && code <= 122) {
-                        return String.fromCharCode(((code - 97 + shift) % 26) + 97);
-                    }
-                    // Numbers
-                    if (code >= 48 && code <= 57) {
-                        return String.fromCharCode(((code - 48 + shift) % 10) + 48);
-                    }
-                    return char;
-                }).join('');
-            },
-            decrypt: (text, shift) => {
-                return text.split('').map(char => {
-                    const code = char.charCodeAt(0);
-                    // Uppercase
-                    if (code >= 65 && code <= 90) {
-                        return String.fromCharCode(((code - 65 - shift + 26) % 26) + 65);
-                    }
-                    // Lowercase
-                    if (code >= 97 && code <= 122) {
-                        return String.fromCharCode(((code - 97 - shift + 26) % 26) + 97);
-                    }
-                    // Numbers
-                    if (code >= 48 && code <= 57) {
-                        return String.fromCharCode(((code - 48 - shift + 10) % 10) + 48);
-                    }
-                    return char;
-                }).join('');
-            }
-        };
-
-        /* ==========================================================================
-           MAIN GAME APPLICATION STATE & CONTROLLER
-           ========================================================================== */
-        class GameApp {
-            constructor() {
-                this.state = {
-                    name: "Agen Zero",
-                    level: 1,
-                    xp: 0,
-                    coins: 0,
-                    hearts: 3,
-                    score: 0,
-                    correctCount: 0,
-                    wrongCount: 0,
-                    totalTimePlayed: 0,
-                    unlockedBadges: [],
-                    scoreHistory: [],
-                    leaderboard: []
-                };
-
-                this.currentGame = null;
-                this.timerInterval = null;
-                this.playTimerInterval = null;
-
-                this.initLocalStorage();
                 this.bindEvents();
+                this.renderBadges();
+                this.setupParticleBackground();
+                this.setupCipherWheelUI();
                 this.startGlobalTimer();
-            }
-
-            initLocalStorage() {
-                const saved = localStorage.getItem('caesar_agent_state');
-                if (saved) {
-                    try {
-                        this.state = { ...this.state, ...JSON.parse(saved) };
-                    } catch(e){}
-                }
-                this.updateHUD();
-            }
-
-            saveState() {
-                localStorage.setItem('caesar_agent_state', JSON.stringify(this.state));
-                this.updateHUD();
             }
 
             bindEvents() {
                 document.getElementById('btn-start-game').addEventListener('click', () => {
-                    const name = document.getElementById('player-name-input').value.trim();
-                    if (name) this.state.name = name;
-                    this.saveState();
+                    const inputName = document.getElementById('player-name-input').value.trim();
+                    if (inputName) this.playerName = inputName;
+                    document.getElementById('welcome-agent-msg').innerText = `Selamat bertugas, Agen ${this.playerName}!`;
                     this.showView('view-menu');
                 });
 
                 document.getElementById('audio-toggle').addEventListener('click', (e) => {
-                    audio.muted = !audio.muted;
-                    e.target.innerText = audio.muted ? '🔇' : '🔊';
+                    this.sound.enabled = !this.sound.enabled;
+                    e.target.innerText = this.sound.enabled ? '🔊' : '🔇';
                 });
 
                 document.getElementById('btn-open-dashboard').addEventListener('click', () => {
-                    this.renderDashboard();
+                    this.updateDashboardUI();
                     this.showView('view-dashboard');
                 });
 
                 document.getElementById('btn-open-playground').addEventListener('click', () => {
-                    this.runPlayground();
                     this.showView('view-playground');
                 });
 
                 document.getElementById('btn-submit-text').addEventListener('click', () => {
-                    this.checkTextAnswer();
+                    const ans = document.getElementById('game-text-answer').value.trim().toUpperCase();
+                    this.checkAnswer(ans);
                 });
 
                 document.getElementById('game-text-answer').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.checkTextAnswer();
+                    if (e.key === 'Enter') {
+                        const ans = document.getElementById('game-text-answer').value.trim().toUpperCase();
+                        this.checkAnswer(ans);
+                    }
                 });
-            }
-
-            startGlobalTimer() {
-                this.playTimerInterval = setInterval(() => {
-                    this.state.totalTimePlayed++;
-                }, 1000);
             }
 
             showView(viewId) {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
                 document.getElementById(viewId).classList.add('active');
-                if (viewId === 'view-menu') {
-                    document.getElementById('welcome-agent-msg').innerText = `Selamat bertugas, Agen ${this.state.name}. Semua progress tersimpan otomatis.`;
-                }
             }
 
             updateHUD() {
-                document.getElementById('hud-level').innerText = `LVL ${this.state.level}`;
-                document.getElementById('hud-xp').innerText = this.state.xp;
-                document.getElementById('hud-coins').innerText = this.state.coins;
+                document.getElementById('hud-xp').innerText = this.xp;
+                document.getElementById('hud-level').innerText = `LVL ${this.level}`;
+                document.getElementById('hud-coins').innerText = this.coins;
                 
                 let heartStr = '';
                 for (let i = 0; i < 3; i++) {
-                    heartStr += i < this.state.hearts ? '❤️' : '🖤';
+                    heartStr += i < this.hearts ? '❤️' : '🖤';
                 }
                 document.getElementById('hud-hearts').innerText = heartStr;
             }
 
             addXP(amount) {
-                this.state.xp += amount;
-                const reqXP = this.state.level * 50;
-                if (this.state.xp >= reqXP) {
-                    this.state.xp -= reqXP;
-                    this.state.level++;
-                    audio.playLevelUp();
-                    this.showModal('🎉 LEVEL UP!', `Selamat Agen ${this.state.name}, kamu naik ke Level ${this.state.level}!`, '🚀 Lanjutkan');
+                this.xp += amount;
+                const newLevel = Math.floor(this.xp / 100) + 1;
+                if (newLevel > this.level) {
+                    this.level = newLevel;
+                    this.sound.playSuccess();
                 }
-                this.saveState();
-            }
-
-            addCoins(amount) {
-                this.state.coins += amount;
-                this.saveState();
-            }
-
-            unlockBadge(badgeId) {
-                if (!this.state.unlockedBadges.includes(badgeId)) {
-                    this.state.unlockedBadges.push(badgeId);
-                    const b = ACHIEVEMENTS.find(x => x.id === badgeId);
-                    if (b) {
-                        this.showModal('🏅 LENCANA BARU!', `Kamu membuka lencana: ${b.icon} ${b.name}`, 'Mantap!');
-                    }
-                    this.saveState();
-                }
-            }
-
-            /* ==========================================================================
-               GAMEPLAY MODES ENGINE
-               ========================================================================== */
-            startMode(mode) {
-                this.state.hearts = 3;
                 this.updateHUD();
+            }
 
-                this.currentGame = {
-                    mode: mode,
-                    subLevel: 1,
-                    questionIndex: 0,
-                    totalQuestions: 10,
-                    timeRemaining: 60,
-                    currentQuestion: null,
-                    timer: null
-                };
+            // Caesar Cipher Helper Algorithms
+            caesarShiftChar(char, shift, isDecrypt = false) {
+                const code = char.charCodeAt(0);
+                let effectiveShift = isDecrypt ? (26 - (shift % 26)) % 26 : shift % 26;
 
-                document.getElementById('mc-options-container').style.display = 'none';
-                document.getElementById('text-input-container').style.display = 'none';
-                document.getElementById('detective-controls').style.display = 'none';
+                // Capital A-Z
+                if (code >= 65 && code <= 90) {
+                    return String.fromCharCode(((code - 65 + effectiveShift) % 26) + 65);
+                }
+                // Lowercase a-z
+                if (code >= 97 && code <= 122) {
+                    return String.fromCharCode(((code - 97 + effectiveShift) % 26) + 97);
+                }
+                // Numbers 0-9
+                if (code >= 48 && code <= 57) {
+                    let numShift = isDecrypt ? (10 - (shift % 10)) % 10 : shift % 10;
+                    return String.fromCharCode(((code - 48 + numShift) % 10) + 48);
+                }
+                return char; // Punctuation/Spaces unchanged
+            }
+
+            caesarTransform(text, shift, isDecrypt = false) {
+                return text.split('').map(c => this.caesarShiftChar(c, shift, isDecrypt)).join('');
+            }
+
+            // Game Logic & Modes Execution
+            startMode(mode) {
+                this.currentMode = mode;
+                this.currentQuestionIndex = 0;
+                this.hearts = 3;
+                this.updateHUD();
+                
                 document.getElementById('wheel-view-container').style.display = 'none';
-                document.getElementById('game-timer').style.display = 'none';
+                document.getElementById('detective-controls').style.display = 'none';
+                document.getElementById('mc-options-container').style.display = 'grid';
+                document.getElementById('text-input-container').style.display = 'none';
 
-                if (mode === 'learn') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 1: BELAJAR SAMBIL BERMAIN';
-                    this.loadLearnSubLevel(1);
-                } else if (mode === 'timeattack') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 2: TIME ATTACK';
-                    this.currentGame.timeRemaining = 60;
-                    document.getElementById('game-timer').style.display = 'block';
-                    this.startTimer();
-                    this.nextGenericQuestion();
-                } else if (mode === 'escaperoom') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 3: ESCAPE ROOM (5 PINTU)';
-                    this.currentGame.totalQuestions = 5;
-                    this.nextGenericQuestion();
-                } else if (mode === 'boss') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 4: BOSS BATTLE';
-                    this.currentGame.totalQuestions = 3;
-                    this.nextBossQuestion();
-                } else if (mode === 'detective') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 5: CIPHER DETECTIVE';
-                    document.getElementById('detective-controls').style.display = 'block';
-                    this.nextDetectiveQuestion();
+                if (mode === 'timeattack') {
+                    this.modeTimer = 60;
+                    this.startTimer(() => this.endGameMode("Waktu Time Attack Habis!"));
                 } else if (mode === 'impossible') {
-                    document.getElementById('game-mode-title').innerText = 'MODE 6: IMPOSSIBLE MODE';
-                    this.currentGame.totalQuestions = 20;
-                    this.currentGame.timeRemaining = 300; // 5 Menit
-                    document.getElementById('game-timer').style.display = 'block';
-                    this.startTimer();
-                    this.nextImpossibleQuestion();
+                    this.modeTimer = 300;
+                    this.startTimer(() => this.endGameMode("Waktu Impossible Mode Habis!"));
+                } else {
+                    this.stopTimer();
+                    document.getElementById('game-timer').innerText = '⏳ ∞';
                 }
 
                 this.showView('view-gameplay');
+                this.nextQuestion();
             }
 
-            startTimer() {
-                clearInterval(this.timerInterval);
-                this.timerInterval = setInterval(() => {
-                    this.currentGame.timeRemaining--;
-                    document.getElementById('game-timer').innerText = `⏳ ${this.currentGame.timeRemaining}s`;
-                    if (this.currentGame.timeRemaining <= 0) {
-                        clearInterval(this.timerInterval);
-                        this.handleGameOver("Waktu habis! Operasi gagal.");
-                    }
-                }, 1000);
-            }
-
-            /* --- MODE 1 SUBLEVELS --- */
-            loadLearnSubLevel(subLvl) {
-                this.currentGame.subLevel = subLvl;
-                this.currentGame.questionIndex = 0;
-
-                if (subLvl === 1) { // Huruf Tunggal
-                    this.nextSingleLetterQuestion();
-                } else if (subLvl === 2) { // Enkripsi Kata
-                    this.nextEncryptWordQuestion();
-                } else if (subLvl === 3) { // Dekripsi Kata
-                    this.nextDecryptWordQuestion();
-                } else if (subLvl === 4) { // Visual Wheel
-                    document.getElementById('wheel-view-container').style.display = 'flex';
-                    this.setupVisualWheel();
-                    this.nextDecryptWordQuestion();
+            nextQuestion() {
+                if (this.currentQuestionIndex >= this.totalQuestions && this.currentMode !== 'timeattack') {
+                    this.endGameMode("Misi Berhasil Diselesaikan!");
+                    return;
                 }
-            }
 
-            nextSingleLetterQuestion() {
-                this.updateProgressUI(`Sub-Level 1: Huruf Tunggal (${this.currentGame.questionIndex + 1}/10)`);
-                const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                const char = alphabet[Math.floor(Math.random() * 26)];
-                const shift = Math.floor(Math.random() * 5) + 1;
-                const answer = CaesarCipher.encrypt(char, shift);
-
-                this.currentGame.currentQuestion = { answer: answer, hintCat: "Huruf Tunggal", plain: char };
-
-                document.getElementById('cipher-label').innerText = `ENKRIPSI HURUF: "${char}"`;
-                document.getElementById('cipher-display').innerText = char;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                // Options
-                const opts = [answer];
-                while(opts.length < 4) {
-                    const randC = alphabet[Math.floor(Math.random() * 26)];
-                    if (!opts.includes(randC)) opts.push(randC);
-                }
-                opts.sort(() => Math.random() - 0.5);
-
-                this.renderMultipleChoice(opts);
-            }
-
-            nextEncryptWordQuestion() {
-                this.updateProgressUI(`Sub-Level 2: Enkripsi Kata (${this.currentGame.questionIndex + 1}/10)`);
-                const { word, category } = this.getRandomWord();
-                const shift = Math.floor(Math.random() * 5) + 1;
-                const cipher = CaesarCipher.encrypt(word, shift);
-
-                this.currentGame.currentQuestion = { answer: cipher, word: word, hintCat: category };
-
-                document.getElementById('cipher-label').innerText = `ENKRIPSI KATA BERIKUT:`;
-                document.getElementById('cipher-display').innerText = word;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('mc-options-container').style.display = 'none';
-                document.getElementById('text-input-container').style.display = 'block';
+                this.currentQuestionIndex++;
                 document.getElementById('game-text-answer').value = '';
-                document.getElementById('game-text-answer').focus();
-            }
 
-            nextDecryptWordQuestion() {
-                this.updateProgressUI(`Sub-Level ${this.currentGame.subLevel}: Dekripsi Kata (${this.currentGame.questionIndex + 1}/10)`);
-                const { word, category } = this.getRandomWord();
-                const shift = Math.floor(Math.random() * 5) + 1;
-                const cipher = CaesarCipher.encrypt(word, shift);
+                // Progress Bar
+                const progPct = ((this.currentQuestionIndex - 1) / this.totalQuestions) * 100;
+                document.getElementById('game-progress-fill').style.width = `${Math.min(progPct, 100)}%`;
 
-                this.currentGame.currentQuestion = { answer: word, hintCat: category, cipher: cipher };
-
-                document.getElementById('cipher-label').innerText = `DEKRIPSI CIPHERTEXT BERIKUT:`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('mc-options-container').style.display = 'none';
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-                document.getElementById('game-text-answer').focus();
-            }
-
-            /* --- OTHER MODES QUESTIONS --- */
-            nextGenericQuestion() {
-                this.updateProgressUI(`Soal ${this.currentGame.questionIndex + 1}/${this.currentGame.totalQuestions}`);
-                const { word, category } = this.getRandomWord();
+                // Generate Question according to Mode
                 const shift = Math.floor(Math.random() * 10) + 1;
-                const cipher = CaesarCipher.encrypt(word, shift);
+                let originalText = "";
+                let cipherText = "";
+                let modeTitle = "";
 
-                this.currentGame.currentQuestion = { answer: word, hintCat: category, cipher: cipher };
+                switch(this.currentMode) {
+                    case 'learn':
+                        modeTitle = "MODE 1: BELAJAR & MAIN";
+                        if (this.currentQuestionIndex <= 3) {
+                            // Single Letter
+                            originalText = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+                            cipherText = this.caesarTransform(originalText, shift);
+                            this.setupMCQuestion(originalText, cipherText, shift, "Dekripsi Huruf Tunggal berikut:");
+                        } else if (this.currentQuestionIndex <= 6) {
+                            // Encrypt word
+                            originalText = this.getRandomWord();
+                            cipherText = this.caesarTransform(originalText, shift);
+                            this.setupMCQuestion(cipherText, originalText, shift, "Enkripsi kata ini (Plaintext -> Ciphertext):", false);
+                        } else if (this.currentQuestionIndex <= 8) {
+                            // Decrypt word
+                            originalText = this.getRandomWord();
+                            cipherText = this.caesarTransform(originalText, shift);
+                            this.setupMCQuestion(originalText, cipherText, shift, "Dekripsi kata ini (Ciphertext -> Plaintext):");
+                        } else {
+                            // Visual Wheel Mode
+                            originalText = this.getRandomWord();
+                            cipherText = this.caesarTransform(originalText, shift);
+                            document.getElementById('wheel-view-container').style.display = 'flex';
+                            this.rotateWheel(shift);
+                            this.setupMCQuestion(originalText, cipherText, shift, "Gunakan Cipher Wheel untuk mendekripsi:");
+                        }
+                        break;
 
-                document.getElementById('cipher-label').innerText = `DEKRIPSI KODE:`;
-                document.getElementById('cipher-display').innerText = cipher;
+                    case 'timeattack':
+                        modeTitle = "MODE 2: TIME ATTACK";
+                        originalText = this.getRandomWord();
+                        cipherText = this.caesarTransform(originalText, shift);
+                        this.setupMCQuestion(originalText, cipherText, shift, "Dekripsi Cepat!");
+                        break;
+
+                    case 'escaperoom':
+                        modeTitle = `MODE 3: ESCAPE ROOM (PINTU ${this.currentQuestionIndex}/5)`;
+                        originalText = this.getRandomWord();
+                        cipherText = this.caesarTransform(originalText, shift);
+                        this.setupTextInputQuestion(originalText, cipherText, shift, "Buka Kunci Pintu dengan Kata Kunci Plaintext:");
+                        break;
+
+                    case 'boss':
+                        modeTitle = "MODE 4: BOSS BATTLE";
+                        originalText = this.sentenceBank[Math.floor(Math.random() * this.sentenceBank.length)];
+                        cipherText = this.caesarTransform(originalText, shift);
+                        this.setupTextInputQuestion(originalText, cipherText, shift, "Hancurkan Pertahanan Mainframe Boss! Dekripsi Kalimat:");
+                        break;
+
+                    case 'detective':
+                        modeTitle = "MODE 5: CIPHER DETECTIVE";
+                        originalText = this.getRandomWord();
+                        cipherText = this.caesarTransform(originalText, shift);
+                        document.getElementById('detective-controls').style.display = 'block';
+                        document.getElementById('mc-options-container').style.display = 'none';
+                        document.getElementById('text-input-container').style.display = 'block';
+                        this.setupDetectiveQuestion(originalText, cipherText);
+                        break;
+
+                    case 'impossible':
+                        modeTitle = "MODE 6: IMPOSSIBLE MODE";
+                        originalText = this.impossibleBank[Math.floor(Math.random() * this.impossibleBank.length)];
+                        cipherText = this.caesarTransform(originalText, shift);
+                        this.setupTextInputQuestion(originalText, cipherText, shift, "Super Complex Cipher (Karakter & Angka):");
+                        break;
+                }
+
+                document.getElementById('game-mode-title').innerText = modeTitle;
+                document.getElementById('game-sub-info').innerText = `Tantangan #${this.currentQuestionIndex}`;
+            }
+
+            getRandomWord() {
+                return this.wordBank[Math.floor(Math.random() * this.wordBank.length)];
+            }
+
+            setupMCQuestion(answer, cipherText, shift, label, isDecrypting = true) {
+                this.currentQuestion = { answer, cipherText, shift };
+                document.getElementById('cipher-label').innerText = label;
+                document.getElementById('cipher-display').innerText = cipherText;
                 document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
 
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-                document.getElementById('game-text-answer').focus();
-            }
+                // Options Generation
+                const options = [answer];
+                while (options.length < 4) {
+                    let fake = isDecrypting ? this.getRandomWord() : this.caesarTransform(this.getRandomWord(), shift);
+                    if (fake.length === answer.length && !options.includes(fake)) {
+                        options.push(fake);
+                    } else if (!options.includes(fake) && options.length < 4) {
+                        options.push(fake);
+                    }
+                }
+                options.sort(() => Math.random() - 0.5);
 
-            nextBossQuestion() {
-                this.updateProgressUI(`MAINFRAME BOSS PHASING (${this.currentGame.questionIndex + 1}/3)`);
-                const sentences = [
-                    "MAINFRAME SERVER CIPHER HAS BEEN LOCKED",
-                    "AGENT DECRYPT THIS FIREWALL IMMEDIATELY",
-                    "VICTORY IS NEAR KEEP SOLVING THE CODE"
-                ];
-                const plain = sentences[this.currentGame.questionIndex];
-                const shift = (this.currentGame.questionIndex + 1) * 3;
-                const cipher = CaesarCipher.encrypt(plain, shift);
-
-                this.currentGame.currentQuestion = { answer: plain, hintCat: "Kalimat Boss", cipher: cipher };
-
-                document.getElementById('cipher-label').innerText = `👾 SERANGAN FIREWALL BOSS:`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-            }
-
-            nextDetectiveQuestion() {
-                this.updateProgressUI(`Investigasi ${this.currentGame.questionIndex + 1}/5`);
-                const { word, category } = this.getRandomWord();
-                const secretShift = Math.floor(Math.random() * 20) + 1;
-                const cipher = CaesarCipher.encrypt(word, secretShift);
-
-                this.currentGame.currentQuestion = { answer: word, secretShift: secretShift, cipher: cipher, hintCat: category };
-
-                document.getElementById('cipher-label').innerText = `PIRANTI TERKUNCI (SHIFT RAHASIA):`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: ??? UNKNOWN ???`;
-
-                this.onDetectiveSliderChange(document.getElementById('detective-slider').value);
-
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-            }
-
-            nextImpossibleQuestion() {
-                this.updateProgressUI(`IMPOSSIBLE MISSION (${this.currentGame.questionIndex + 1}/20)`);
-                const complexPhrases = [
-                    "Agent007: Misi Rahasia #1",
-                    "Password: Caesar2026!",
-                    "Pesan Kritis 99% Terenkripsi",
-                    "Informatika SMP & SMA 2026",
-                    "Cyber Security Alpha-1"
-                ];
-                const plain = complexPhrases[this.currentGame.questionIndex % complexPhrases.length];
-                const shift = Math.floor(Math.random() * 15) + 1;
-                const cipher = CaesarCipher.encrypt(plain, shift);
-
-                this.currentGame.currentQuestion = { answer: plain, hintCat: "Ekstrem", cipher: cipher };
-
-                document.getElementById('cipher-label').innerText = `PESAN SANGAT RAHASIA:`;
-                document.getElementById('cipher-display').innerText = cipher;
-                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
-
-                document.getElementById('text-input-container').style.display = 'block';
-                document.getElementById('game-text-answer').value = '';
-            }
-
-            /* --- ANSWER VERIFICATION & HANDLING --- */
-            renderMultipleChoice(options) {
-                const container = document.getElementById('mc-options-container');
-                container.style.display = 'grid';
-                container.innerHTML = '';
+                const grid = document.getElementById('mc-options-container');
+                grid.innerHTML = '';
                 options.forEach(opt => {
                     const btn = document.createElement('button');
                     btn.className = 'option-btn';
                     btn.innerText = opt;
-                    btn.onclick = () => this.verifyAnswer(opt);
-                    container.appendChild(btn);
+                    btn.onclick = () => this.checkAnswer(opt);
+                    grid.appendChild(btn);
                 });
             }
 
-            checkTextAnswer() {
-                const val = document.getElementById('game-text-answer').value.trim();
-                this.verifyAnswer(val);
+            setupTextInputQuestion(answer, cipherText, shift, label) {
+                this.currentQuestion = { answer, cipherText, shift };
+                document.getElementById('cipher-label').innerText = label;
+                document.getElementById('cipher-display').innerText = cipherText;
+                document.getElementById('shift-info').innerText = `Shift Key: +${shift}`;
+                document.getElementById('mc-options-container').style.display = 'none';
+                document.getElementById('text-input-container').style.display = 'block';
             }
 
-            verifyAnswer(userAns) {
-                const q = this.currentGame.currentQuestion;
-                if (!q) return;
-
-                const isCorrect = userAns.toUpperCase() === q.answer.toUpperCase();
-
-                if (isCorrect) {
-                    audio.playCorrect();
-                    this.state.correctCount++;
-                    this.state.score += 100;
-                    this.addXP(20);
-                    this.addCoins(10);
-                    this.unlockBadge('beginner');
-
-                    this.currentGame.questionIndex++;
-
-                    // Progression Logic
-                    if (this.currentGame.mode === 'learn') {
-                        if (this.currentGame.questionIndex >= 10) {
-                            if (this.currentGame.subLevel < 4) {
-                                this.showModal('🏆 SUB-LEVEL SELESAI!', `Kamu menyelesaikan Sub-Level ${this.currentGame.subLevel}! Naik ke tingkat berikutnya.`, 'Lanjut');
-                                this.loadLearnSubLevel(this.currentGame.subLevel + 1);
-                            } else {
-                                this.handleWin("Selamat! Kamu berhasil menyelesaikan seluruh Mode Belajar & Main!");
-                            }
-                        } else {
-                            this.loadLearnSubLevel(this.currentGame.subLevel);
-                        }
-                    } else if (this.currentGame.mode === 'detective') {
-                        if (this.currentGame.questionIndex >= 5) {
-                            this.unlockBadge('detective');
-                            this.handleWin("Luar biasa Agen! Kamu berhasil mendekripsi semua kode rahasia!");
-                        } else {
-                            this.nextDetectiveQuestion();
-                        }
-                    } else if (this.currentGame.mode === 'boss') {
-                        if (this.currentGame.questionIndex >= 3) {
-                            this.unlockBadge('legend');
-                            this.handleWin("BOOM! Mainframe Boss berhasil dihancurkan!");
-                        } else {
-                            this.nextBossQuestion();
-                        }
-                    } else if (this.currentGame.mode === 'impossible') {
-                        if (this.currentGame.questionIndex >= 20) {
-                            this.unlockBadge('impossible');
-                            this.handleWin("LUAR BIASA APOTEOSIS! Kamu memenangkan IMPOSSIBLE MODE!");
-                        } else {
-                            this.nextImpossibleQuestion();
-                        }
-                    } else { // TimeAttack & EscapeRoom
-                        if (this.currentGame.questionIndex >= this.currentGame.totalQuestions) {
-                            if (this.currentGame.mode === 'escaperoom') this.unlockBadge('agent');
-                            if (this.currentGame.mode === 'timeattack') this.unlockBadge('speed');
-                            this.handleWin("Misi Berhasil Diselesaikan!");
-                        } else {
-                            this.nextGenericQuestion();
-                        }
-                    }
-
-                } else {
-                    audio.playWrong();
-                    this.state.wrongCount++;
-                    this.state.hearts--;
-                    this.updateHUD();
-
-                    if (this.state.hearts <= 0) {
-                        this.handleGameOver("Heart kamu telah habis!");
-                    } else {
-                        this.showModal('❌ JAWABAN SALAH', `Jawabanmu belum tepat. Sisa Heart: ${this.state.hearts}`, 'Coba Lagi');
-                    }
-                }
-            }
-
-            handleWin(msg) {
-                clearInterval(this.timerInterval);
-                audio.playLevelUp();
-                
-                // Record Score
-                this.state.scoreHistory.push(this.state.score);
-                this.state.leaderboard.push({
-                    name: this.state.name,
-                    score: this.state.score,
-                    accuracy: Math.round((this.state.correctCount / (this.state.correctCount + this.state.wrongCount || 1)) * 100) + '%',
-                    date: new Date().toLocaleDateString()
-                });
-                this.saveState();
-
-                this.showModal('🎉 MISI SUKSES!', `${msg}<br><br>Total Skor: <strong>${this.state.score}</strong>`, 'Ke Menu Utama', () => {
-                    this.showView('view-menu');
-                });
-            }
-
-            handleGameOver(reason) {
-                clearInterval(this.timerInterval);
-                audio.playGameOver();
-                this.showModal('💀 GAME OVER', `${reason}<br><br>Jangan menyerah Agen, coba lagi!`, 'Kembali ke Menu', () => {
-                    this.showView('view-menu');
-                });
-            }
-
-            /* --- HELPER TOOLS --- */
-            getRandomWord() {
-                const cats = Object.keys(WORD_DATABASE);
-                const cat = cats[Math.floor(Math.random() * cats.length)];
-                const words = WORD_DATABASE[cat];
-                const word = words[Math.floor(Math.random() * words.length)];
-                return { word, category: cat };
-            }
-
-            updateProgressUI(subTitle) {
-                document.getElementById('game-sub-info').innerText = subTitle;
-                const pct = (this.currentGame.questionIndex / this.currentGame.totalQuestions) * 100;
-                document.getElementById('game-progress-fill').style.width = `${pct}%`;
-            }
-
-            adjustDetectiveShift(dir) {
-                const slider = document.getElementById('detective-slider');
-                let val = parseInt(slider.value) + dir;
-                if (val < 1) val = 25;
-                if (val > 25) val = 1;
-                slider.value = val;
-                this.onDetectiveSliderChange(val);
+            setupDetectiveQuestion(answer, cipherText) {
+                this.currentQuestion = { answer, cipherText, shift: null };
+                document.getElementById('cipher-label').innerText = "Cari Kunci Shift & Dekripsi Teks!";
+                document.getElementById('cipher-display').innerText = cipherText;
+                document.getElementById('shift-info').innerText = `Shift Key: UNKNOWN ❓`;
+                this.onDetectiveSliderChange(1);
             }
 
             onDetectiveSliderChange(val) {
                 document.getElementById('detective-shift-val').innerText = `Pilihan Shift: ${val}`;
-                const cipherText = document.getElementById('cipher-display').innerText;
-                const preview = CaesarCipher.decrypt(cipherText, parseInt(val));
-                document.getElementById('detective-live-text').innerText = preview;
+                if (this.currentQuestion) {
+                    const live = this.caesarTransform(this.currentQuestion.cipherText, parseInt(val), true);
+                    document.getElementById('detective-live-text').innerText = live;
+                }
+            }
+
+            adjustDetectiveShift(delta) {
+                const slider = document.getElementById('detective-slider');
+                let newVal = parseInt(slider.value) + delta;
+                if (newVal >= 1 && newVal <= 25) {
+                    slider.value = newVal;
+                    this.onDetectiveSliderChange(newVal);
+                }
+            }
+
+            checkAnswer(userAns) {
+                this.totalAttempts++;
+                const isCorrect = userAns.toUpperCase() === this.currentQuestion.answer.toUpperCase();
+
+                if (isCorrect) {
+                    this.sound.playSuccess();
+                    this.addXP(20);
+                    this.coins += 5;
+                    this.totalScore += 100;
+                    this.totalSolved++;
+                    this.correctAnswers++;
+                    this.updateHUD();
+
+                    if (this.totalSolved >= 10) this.unlockBadge('master_dec');
+                    this.nextQuestion();
+                } else {
+                    this.sound.playFail();
+                    this.hearts--;
+                    this.updateHUD();
+
+                    if (this.hearts <= 0) {
+                        this.endGameMode("Nyawa Habis! Misi Gagal.");
+                    } else {
+                        alert(`Jawaban Salah! Sisa nyawa: ${this.hearts}`);
+                    }
+                }
             }
 
             useHint(type) {
-                const q = this.currentGame.currentQuestion;
-                if (!q) return;
+                if (!this.currentQuestion) return;
 
                 if (type === 'firstLetter') {
-                    if (this.state.coins < 15) return alert("Coin tidak cukup!");
-                    this.addCoins(-15);
-                    const letter = (q.answer || q.word)[0];
-                    alert(`💡 Hint: Huruf pertama adalah "${letter}"`);
+                    if (this.coins >= 15) {
+                        this.coins -= 15;
+                        this.updateHUD();
+                        alert(`Huruf Pertama Jawaban: "${this.currentQuestion.answer.charAt(0)}"`);
+                    } else alert("Koin tidak cukup!");
                 } else if (type === 'length') {
-                    if (this.state.coins < 10) return alert("Coin tidak cukup!");
-                    this.addCoins(-10);
-                    const len = (q.answer || q.word).length;
-                    alert(`📏 Hint: Panjang kata adalah ${len} huruf`);
+                    if (this.coins >= 10) {
+                        this.coins -= 10;
+                        this.updateHUD();
+                        alert(`Panjang Karakter: ${this.currentQuestion.answer.length} Huruf`);
+                    } else alert("Koin tidak cukup!");
                 } else if (type === 'category') {
-                    if (this.state.coins < 10) return alert("Coin tidak cukup!");
-                    this.addCoins(-10);
-                    alert(`🏷️ Hint: Kategori kata adalah "${q.hintCat}"`);
+                    if (this.coins >= 10) {
+                        this.coins -= 10;
+                        this.updateHUD();
+                        alert(`Kategori: Kriptografi / Operasi Rahasia Agent`);
+                    } else alert("Koin tidak cukup!");
                 }
             }
 
-            setupVisualWheel() {
-                const outer = document.getElementById('wheel-outer');
-                const inner = document.getElementById('wheel-inner');
-                outer.innerHTML = '';
-                inner.innerHTML = '';
-
-                const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                for (let i = 0; i < 26; i++) {
-                    const angle = (i / 26) * 360;
-
-                    const elO = document.createElement('div');
-                    elO.className = 'wheel-letter';
-                    elO.innerText = alpha[i];
-                    elO.style.transform = `rotate(${angle}deg) translateY(-110px) rotate(-${angle}deg)`;
-                    outer.appendChild(elO);
-
-                    const elI = document.createElement('div');
-                    elI.className = 'wheel-letter';
-                    elI.innerText = alpha[i];
-                    elI.style.transform = `rotate(${angle}deg) translateY(-75px) rotate(-${angle}deg)`;
-                    inner.appendChild(elI);
-                }
+            startTimer(onExpire) {
+                this.stopTimer();
+                this.timerInterval = setInterval(() => {
+                    this.modeTimer--;
+                    document.getElementById('game-timer').innerText = `⏳ ${this.modeTimer}s`;
+                    if (this.modeTimer <= 0) {
+                        this.stopTimer();
+                        onExpire();
+                    }
+                }, 1000);
             }
 
-            /* --- PLAYGROUND ENGINE --- */
-            runPlayground(mode = 'encrypt') {
-                const text = document.getElementById('pg-text').value.toUpperCase();
+            stopTimer() {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+            }
+
+            startGlobalTimer() {
+                this.globalTimer = setInterval(() => {
+                    this.playTimeSeconds++;
+                }, 1000);
+            }
+
+            endGameMode(msg) {
+                this.stopTimer();
+                this.unlockBadge('first_win');
+                if (this.currentMode === 'timeattack') this.unlockBadge('speed_demon');
+                if (this.currentMode === 'boss') this.unlockBadge('boss_slayer');
+
+                document.getElementById('modal-title').innerText = msg;
+                document.getElementById('modal-stats').innerHTML = `
+                    <p><strong>Total Skor Diterima:</strong> ${this.totalScore}</p>
+                    <p><strong>Soal Berhasil Diberantas:</strong> ${this.correctAnswers}</p>
+                    <p><strong>Akurasi Bertugas:</strong> ${this.totalAttempts > 0 ? Math.round((this.correctAnswers/this.totalAttempts)*100) : 0}%</p>
+                `;
+                document.getElementById('modal-overlay').classList.add('active');
+            }
+
+            closeModal() {
+                document.getElementById('modal-overlay').classList.remove('active');
+                this.showView('view-menu');
+            }
+
+            exitToMenu() {
+                this.stopTimer();
+                this.showView('view-menu');
+            }
+
+            // Interactive Playground Feature
+            runPlayground(type = 'encrypt') {
+                const input = document.getElementById('pg-input').value;
                 const shift = parseInt(document.getElementById('pg-shift').value);
+                const isDecrypt = type === 'decrypt';
 
-                const res = mode === 'encrypt' ? CaesarCipher.encrypt(text, shift) : CaesarCipher.decrypt(text, shift);
-                document.getElementById('pg-result').innerText = res;
+                const output = this.caesarTransform(input, shift, isDecrypt);
+                document.getElementById('pg-output').innerText = output || '-';
 
-                const container = document.getElementById('pg-steps-container');
+                // Render Visual Steps
+                const container = document.getElementById('pg-steps');
                 container.innerHTML = '';
-
-                for (let i = 0; i < text.length; i++) {
-                    const orig = text[i];
-                    const trans = res[i];
+                
+                input.split('').forEach(char => {
+                    if (char.trim() === '') return;
+                    const resChar = this.caesarShiftChar(char, shift, isDecrypt);
                     const card = document.createElement('div');
                     card.className = 'step-card';
-                    card.innerHTML = `<div class="orig">${orig}</div><div class="arrow">↓ (+${shift})</div><div class="res">${trans}</div>`;
+                    card.innerHTML = `
+                        <div class="orig">${char}</div>
+                        <div class="arrow">↓ (+${shift})</div>
+                        <div class="res">${resChar}</div>
+                    `;
                     container.appendChild(card);
+                });
+            }
+
+            // Dashboard & Achievements UI Rendering
+            unlockBadge(id) {
+                const badge = this.badges.find(b => b.id === id);
+                if (badge && !badge.unlocked) {
+                    badge.unlocked = true;
+                    this.renderBadges();
                 }
             }
 
-            /* --- DASHBOARD RENDERER --- */
-            renderDashboard() {
-                document.getElementById('dash-score').innerText = this.state.score;
-                const total = this.state.correctCount + this.state.wrongCount;
-                const acc = total > 0 ? Math.round((this.state.correctCount / total) * 100) : 0;
+            renderBadges() {
+                const container = document.getElementById('badge-container');
+                if (!container) return;
+                container.innerHTML = '';
+                this.badges.forEach(b => {
+                    const el = document.createElement('div');
+                    el.className = `badge-item ${b.unlocked ? 'unlocked' : ''}`;
+                    el.innerHTML = `
+                        <div class="badge-icon">${b.icon}</div>
+                        <div class="badge-name">${b.name}</div>
+                    `;
+                    el.title = b.desc;
+                    container.appendChild(el);
+                });
+            }
+
+            updateDashboardUI() {
+                document.getElementById('dash-score').innerText = this.totalScore;
+                document.getElementById('dash-solved').innerText = this.totalSolved;
+                document.getElementById('dash-time').innerText = `${this.playTimeSeconds}s`;
+                
+                const acc = this.totalAttempts > 0 ? Math.round((this.correctAnswers / this.totalAttempts) * 100) : 0;
                 document.getElementById('dash-accuracy').innerText = `${acc}%`;
-                document.getElementById('dash-solved').innerText = this.state.correctCount;
-                document.getElementById('dash-time').innerText = `${this.state.totalTimePlayed}s`;
 
-                // Badges
-                const bContainer = document.getElementById('badge-container');
-                bContainer.innerHTML = '';
-                ACHIEVEMENTS.forEach(ach => {
-                    const unlocked = this.state.unlockedBadges.includes(ach.id);
-                    const div = document.createElement('div');
-                    div.className = `badge-item ${unlocked ? 'unlocked' : ''}`;
-                    div.innerHTML = `<div class="badge-icon">${ach.icon}</div><div class="badge-name">${ach.name}</div>`;
-                    bContainer.appendChild(div);
-                });
+                // Leaderboard Simulation
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = `
+                    <tr><td>#1</td><td>Agen ${this.playerName} (Kamu)</td><td>${this.totalScore}</td><td>${this.playTimeSeconds}s</td></tr>
+                    <tr><td>#2</td><td>Agen CipherX</td><td>850</td><td>120s</td></tr>
+                    <tr><td>#3</td><td>Agen Phantom</td><td>600</td><td>240s</td></tr>
+                `;
 
-                // Leaderboard
-                const lbBody = document.getElementById('leaderboard-body');
-                lbBody.innerHTML = '';
-                this.state.leaderboard.sort((a,b) => b.score - a.score).slice(0, 5).forEach((item, idx) => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${idx + 1}</td><td>${item.name}</td><td>${item.score}</td><td>${item.accuracy}</td><td>${item.date}</td>`;
-                    lbBody.appendChild(tr);
-                });
-
-                // Render Chart
                 this.renderChart();
             }
 
             renderChart() {
                 const canvas = document.getElementById('score-chart');
+                if (!canvas) return;
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                const data = this.state.scoreHistory.slice(-10);
-                if (data.length < 2) {
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.font = '12px sans-serif';
-                    ctx.fillText("Mainkan beberapa permainan untuk melihat grafik perkembangan.", 20, 80);
-                    return;
-                }
-
+                // Simple Canvas Line Drawing Simulation
+                ctx.beginPath();
                 ctx.strokeStyle = '#00f3ff';
                 ctx.lineWidth = 3;
-                ctx.beginPath();
-
-                const max = Math.max(...data, 100);
-                const stepX = canvas.width / (data.length - 1);
-
-                data.forEach((val, i) => {
-                    const x = i * stepX;
-                    const y = canvas.height - (val / max) * (canvas.height - 30) - 15;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                });
+                ctx.moveTo(10, 130);
+                ctx.lineTo(80, 100);
+                ctx.lineTo(160, 110);
+                ctx.lineTo(240, 50);
+                ctx.lineTo(320, 20);
                 ctx.stroke();
             }
 
-            /* --- MODAL DIALOGS --- */
-            showModal(title, bodyHtml, btnText, callback = null) {
-                document.getElementById('modal-title').innerHTML = title;
-                document.getElementById('modal-body').innerHTML = bodyHtml;
-                const btn = document.getElementById('modal-btn-action');
-                btn.innerText = btnText;
+            // Dynamic Cipher Wheel Rendering
+            setupCipherWheelUI() {
+                const outer = document.getElementById('wheel-outer');
+                const inner = document.getElementById('wheel-inner');
+                if (!outer || !inner) return;
 
-                const overlay = document.getElementById('modal-overlay');
-                overlay.classList.add('active');
+                const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                const total = 26;
 
-                btn.onclick = () => {
-                    overlay.classList.remove('active');
-                    if (callback) callback();
-                };
+                for (let i = 0; i < total; i++) {
+                    const angle = (i / total) * 360;
+                    
+                    const outerLetter = document.createElement('div');
+                    outerLetter.className = 'wheel-letter';
+                    outerLetter.innerText = alphabet[i];
+                    outerLetter.style.transform = `rotate(${angle}deg) translateY(-105px)`;
+                    outer.appendChild(outerLetter);
+
+                    const innerLetter = document.createElement('div');
+                    innerLetter.className = 'wheel-letter';
+                    innerLetter.innerText = alphabet[i];
+                    innerLetter.style.transform = `rotate(${angle}deg) translateY(-72px)`;
+                    inner.appendChild(innerLetter);
+                }
             }
 
-            exitToMenu() {
-                clearInterval(this.timerInterval);
-                this.showView('view-menu');
+            rotateWheel(shift) {
+                const inner = document.getElementById('wheel-inner');
+                if (inner) {
+                    const angle = (shift / 26) * 360;
+                    inner.style.transform = `rotate(-${angle}deg)`;
+                }
+            }
+
+            // Canvas Dynamic Particle Background
+            setupParticleBackground() {
+                const canvas = document.getElementById('particle-canvas');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+
+                let width = (canvas.width = window.innerWidth);
+                let height = (canvas.height = window.innerHeight);
+
+                window.addEventListener('resize', () => {
+                    width = canvas.width = window.innerWidth;
+                    height = canvas.height = window.innerHeight;
+                });
+
+                const particles = Array.from({ length: 40 }, () => ({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 2 + 1,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    alpha: Math.random() * 0.5 + 0.2
+                }));
+
+                function animate() {
+                    ctx.clearRect(0, 0, width, height);
+                    particles.forEach(p => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+
+                        if (p.x < 0) p.x = width;
+                        if (p.x > width) p.x = 0;
+                        if (p.y < 0) p.y = height;
+                        if (p.y > height) p.y = 0;
+
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(0, 243, 255, ${p.alpha})`;
+                        ctx.fill();
+                    });
+                    requestAnimationFrame(animate);
+                }
+                animate();
             }
         }
 
-        // Initialize App Globally
-        const app = new GameApp();
+        // Initialize App Instance on DOM Load
+        let app;
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new CipherEngine();
+            app.init();
+        });
     </script>
 </body>
 </html>
